@@ -85,11 +85,28 @@ func (dr *DrINI) SetSlotFromSave(save Save, chapter int, index int, replace bool
 		}
 	}
 
-	dr.INI[chapterIndexToKey(chapter, index)] = ini.INISection(map[string]string {
-		"Name": `"` + save[0] + `"`,
-		"Time": `"` + save[len(save)-1] + `"`,
-		"Room": `"` + save[len(save)-2] + `"`,
-	})
+	f := func(name string, time any, room float64) {
+		dr.INI[chapterIndexToKey(chapter, index)] = ini.INISection(map[string]string{
+			"Name": fmt.Sprintf(`"%s"`, name),
+			"Time": fmt.Sprintf(`"%f"`, time),
+			"Room": fmt.Sprintf(`"%f"`, room),
+		})
+	}
+
+	switch s := save.(type) {
+	case Save1:
+		f(s.PlayerName, s.Time, s.Room)
+	case Save2:
+		f(s.PlayerName, s.Time, s.Room)
+	case Save3:
+		f(s.PlayerName, s.Time, s.Room)
+	case Save4:
+		f(s.PlayerName, s.Time, s.Room)
+	case Save5:
+		f(s.PlayerName, s.Time, s.Room)
+	default:
+		return false
+	}
 
 	_ = dr.Write()
 	return true

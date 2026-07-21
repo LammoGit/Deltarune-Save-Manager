@@ -327,12 +327,23 @@ func main() {
 					)
 					for _, id := range keys {
 						slot := manager.Slots[id]
+
+						var playerName string
+						var charName string
+						switch s := slot.(type) {
+						case saves.Save1:
+							playerName = s.PlayerName
+							charName = s.CharName
+						case saves.Save2:
+							playerName = s.PlayerName
+							charName = s.CharName
+						}
 						fmt.Printf(
-							"Chapter:%d Slot:%d Player:%s Character:%s\n ",
+							"Chapter:%d Slot:%d Player:%s Character:%s\n",
 							id.Chapter,
 							id.Slot,
-							slot.Name(),
-							slot.CharName(),
+							playerName,
+							charName,
 						)
 					}
 					return nil

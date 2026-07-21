@@ -11,19 +11,29 @@ import (
 type SaveID struct {
 	Name    string
 	Chapter int
+	SideB   bool
 }
 
 func (id SaveID) String() string {
-	return fmt.Sprintf("%d_%s", id.Chapter, id.Name)
+	if id.SideB {
+		return fmt.Sprintf("%d_a_%s", id.Chapter, id.Name)
+	} else {
+		return fmt.Sprintf("%d_b_%s", id.Chapter, id.Name)
+	}
 }
 
 type SlotID struct {
 	Chapter int
 	Slot    int
+	SideB   bool
 }
 
 func (id SlotID) String() string {
-	return fmt.Sprintf("filech%d_%d", id.Chapter, id.Slot)
+	if id.SideB {
+		return fmt.Sprintf("filech%d_%d_b", id.Chapter, id.Slot)
+	} else {
+		return fmt.Sprintf("filech%d_%d", id.Chapter, id.Slot)
+	}
 }
 
 type SaveManager struct {
@@ -34,10 +44,6 @@ type SaveManager struct {
 	SaveLinks   map[string][]SaveID
 	SlotLinks   map[string][]SlotID
 	Dr          DrINI
-}
-
-func loadSave(path string) (Save, error) {
-	return LoadSave(path)
 }
 
 func loadSaves(dirPath string) (map[SaveID]Save, map[string][]SaveID, error) {
@@ -56,19 +62,20 @@ func loadSaves(dirPath string) (map[SaveID]Save, map[string][]SaveID, error) {
 
 		match := saveRegex.FindStringSubmatch(entry.Name())
 
-		if len(match) != 3 {
+		if len(match) != 4 {
 			continue
 		}
 
 		chapter, err := strconv.Atoi(match[1])
 		if err != nil { continue }
 
-		name := match[2]
+		sideB := match[2] != "a"
+		name  := match[3]
 
-		save, err := LoadSave(savePath)
+		save, err := LoadSave(savePath, chapter)
 		if err != nil { continue }
 
-		saveID := SaveID{ name, chapter }
+		saveID := SaveID{name, chapter, sideB}
 		hardLinkID, err := getHardLinkID(savePath)
 		if err != nil { continue }
 
@@ -95,7 +102,7 @@ func loadSlots(dirPath string) (map[SlotID]Save, map[string][]SlotID, error) {
 		
 		match := slotRegex.FindStringSubmatch(entry.Name())
 		
-		if len(match) != 3 { 
+		if len(match) != 4 { 
 			continue 
 		}
 		
@@ -104,11 +111,13 @@ func loadSlots(dirPath string) (map[SlotID]Save, map[string][]SlotID, error) {
 		
 		slot, err := strconv.Atoi(match[2])
 		if err != nil { continue }
+
+		sideB := match[3] != ""
 		
-		save, err := LoadSave(slotPath)
+		save, err := LoadSave(slotPath, chapter)
 		if err != nil { continue }
 		
-		slotID := SlotID{ chapter, slot }
+		slotID := SlotID{ chapter, slot, sideB }
 		hardLinkID, err := getHardLinkID(slotPath)
 		if err != nil { continue }
 
@@ -171,26 +180,36 @@ func (sm *SaveManager) Create(name string, chapter int) error {
 	if chapter > MAX_CHAPTER {
 		return ErrChapterNotSupported
 	}
+	
 	if name == "" {
 		return ErrEmptySaveName
 	}
-	saveID := SaveID{ name, chapter }
+	
+	saveID := SaveID{Name: name, Chapter: chapter}
 	path := filepath.Join(sm.ManagerPath, saveID.String())
 	file, err := os.OpenFile(path, os.O_WRONLY | os.O_CREATE | os.O_EXCL, 0644)
 	if err != nil {
 		return err
 	}
 	defer file.Close()
-	_, err = file.Write(getExampleSaveBytesForChapter(chapter))
+
+	content, err := getExampleSaveBytesForChapter(chapter)
 	if err != nil {
 		return err
 	}
+	
+	_, err = file.Write(content)
+	if err != nil {
+		return err
+	}
+
 	hardLinkID, err := getHardLinkID(path)
 	if err != nil {
 		return err
 	}
+
 	sm.SaveLinks[hardLinkID] = append(sm.SaveLinks[hardLinkID], saveID)
-	sm.Saves[saveID], err = loadSave(path)
+	sm.Saves[saveID], err = LoadSave(path, chapter)
 	if err != nil {
 		return err
 	}
@@ -199,8 +218,8 @@ func (sm *SaveManager) Create(name string, chapter int) error {
 }
 
 func (sm *SaveManager) Swap(name1, name2 string, chapter int) error {
-	saveID1 := SaveID{name1, chapter}
-	saveID2 := SaveID{name2, chapter}
+	saveID1 := SaveID{Name: name1, Chapter: chapter}
+	saveID2 := SaveID{Name: name2, Chapter: chapter}
 
 	path1 := filepath.Join(sm.ManagerPath, saveID1.String())
 	path2 := filepath.Join(sm.ManagerPath, saveID2.String())
@@ -263,10 +282,10 @@ func (sm *SaveManager) Swap(name1, name2 string, chapter int) error {
 }
 
 func (sm *SaveManager) SetSlot(name string, chapter, slot int, eraseUnmanaged bool) error {
-	saveID := SaveID{ name, chapter }
+	saveID := SaveID{Name: name, Chapter: chapter}
 	savePath := filepath.Join(sm.ManagerPath, saveID.String())
 
-	slotID := SlotID{ chapter, slot }
+	slotID := SlotID{Chapter: chapter, Slot: slot}
 	slotPath := filepath.Join(sm.SlotsPath, slotID.String())
 
 	saveHardLink, ok := sm.hardLinkIDFromSaveID(saveID)
@@ -294,7 +313,7 @@ func (sm *SaveManager) SetSlot(name string, chapter, slot int, eraseUnmanaged bo
 		return err
 	}
 	// Update slot object
-	sm.Slots[slotID], _ = loadSave(slotPath)
+	sm.Slots[slotID], _ = LoadSave(slotPath, chapter)
 	// Remove slot identifier from the old hard link
 	sm.SlotLinks[slotHardLink] = deleteEqual(sm.SlotLinks[slotHardLink], slotID)
 	// Add slot identifier to the new hard link
@@ -311,7 +330,7 @@ func (sm *SaveManager) SetSlot(name string, chapter, slot int, eraseUnmanaged bo
 }
 
 func (sm *SaveManager) UnsetSlot(chapter, slot int, eraseUnmanaged bool) error {
-	slotID := SlotID{ chapter, slot }
+	slotID := SlotID{Chapter: chapter, Slot: slot}
 	slotPath := filepath.Join(sm.SlotsPath, slotID.String())
 
 	slotHardLink, ok := sm.hardLinkIDFromSlotID(slotID)
@@ -350,10 +369,10 @@ func (sm *SaveManager) UnsetSlot(chapter, slot int, eraseUnmanaged bool) error {
 }
 
 func (sm *SaveManager) SaveSlot(name string, chapter, slot int) error {
-	saveID := SaveID{ name, chapter }
+	saveID := SaveID{Name: name, Chapter: chapter}
 	savePath := filepath.Join(sm.ManagerPath, saveID.String())
 
-	slotID := SlotID{ chapter, slot }
+	slotID := SlotID{Chapter: chapter, Slot: slot}
 	slotPath := filepath.Join(sm.SlotsPath, slotID.String())
 
 
@@ -376,7 +395,7 @@ func (sm *SaveManager) SaveSlot(name string, chapter, slot int) error {
 	}
 
 	// Add new save object to the saves map
-	sm.Saves[saveID], _ = loadSave(savePath)
+	sm.Saves[saveID], _ = LoadSave(savePath, chapter)
 
 	// Add save idetifier to the hard link map
 	sm.SaveLinks[slotHardLink] = append(sm.SaveLinks[slotHardLink], saveID)
@@ -385,7 +404,7 @@ func (sm *SaveManager) SaveSlot(name string, chapter, slot int) error {
 }
 
 func (sm *SaveManager) Remove(name string, chapter int, removeSlots bool) error {
-	saveID := SaveID{ name, chapter }
+	saveID := SaveID{Name: name, Chapter: chapter}
 	savePath := filepath.Join(sm.ManagerPath, saveID.String())
 
 	saveHardLink, ok := sm.hardLinkIDFromSaveID(saveID)
@@ -428,8 +447,8 @@ func (sm *SaveManager) Remove(name string, chapter int, removeSlots bool) error 
 }
 
 func (sm *SaveManager) Rename(nameFrom, nameTo string, chapter int) error {
-	saveIDFrom := SaveID{ nameFrom, chapter }
-	saveIDTo := SaveID{ nameTo, chapter }
+	saveIDFrom := SaveID{Name: nameFrom, Chapter: chapter}
+	saveIDTo := SaveID{Name: nameTo, Chapter: chapter}
 
 	savePathFrom := filepath.Join(sm.ManagerPath, saveIDFrom.String())
 	savePathTo := filepath.Join(sm.ManagerPath, saveIDTo.String())
@@ -465,8 +484,8 @@ func (sm *SaveManager) Rename(nameFrom, nameTo string, chapter int) error {
 }
 
 func (sm *SaveManager) Copy(nameFrom, nameTo string, chapter int) error {
-	saveIDFrom := SaveID{ nameFrom, chapter }
-	saveIDTo := SaveID{ nameTo, chapter }
+	saveIDFrom := SaveID{Name: nameFrom, Chapter: chapter}
+	saveIDTo := SaveID{Name: nameTo, Chapter: chapter}
 
 	savePathFrom := filepath.Join(sm.ManagerPath, saveIDFrom.String())
 	savePathTo := filepath.Join(sm.ManagerPath, saveIDTo.String())
@@ -502,7 +521,7 @@ func (sm *SaveManager) Copy(nameFrom, nameTo string, chapter int) error {
 		return err
 	}
 
-	save, err := ParseSaveReader(fileFrom)
+	save, err := ParseSaveReader(fileFrom, chapter)
 	if err != nil {
 		return err
 	}
@@ -521,11 +540,10 @@ func (sm *SaveManager) Copy(nameFrom, nameTo string, chapter int) error {
 }
 
 func (sm *SaveManager) Edit(name string, chapter int, props map[string]string) error {
-	saveID := SaveID{ name, chapter }
+	saveID := SaveID{Name: name, Chapter: chapter}
 	save, ok := sm.Saves[saveID]
 	if !ok {
 		return ErrSaveNotExist
 	}
-	return save.Edit(props)
-	// update dr.ini
+	return Edit(&save, props)
 }
