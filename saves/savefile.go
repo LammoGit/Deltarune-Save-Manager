@@ -1,14 +1,15 @@
 package saves
 
 import (
-	"fmt"
 	"bytes"
-	"strings"
-	"strconv"
+	"dsm/utils"
+	_ "embed"
+	"fmt"
 	"io"
 	"os"
 	"reflect"
-	_ "embed"
+	"strconv"
+	"strings"
 )
 
 /* Loading chapters' default save files */
@@ -32,6 +33,7 @@ var chapter5bytes []byte
 
 //go:generate stringer -type=Character -trimprefix=Character
 type Character int
+
 const (
 	CharacterRalsei Character = iota
 	CharacterKris
@@ -41,24 +43,20 @@ const (
 )
 
 type Weapon int
-const (
-	
-)
+
+const ()
 
 type Armor int
-const (
-	
-)
+
+const ()
 
 type Spell int
-const (
 
-)
+const ()
 
 type Element int
-const (
 
-)
+const ()
 
 type ItemStats struct {
 	Attack    int
@@ -170,34 +168,37 @@ type CharacterStats2 struct {
 }
 
 type Inventory2 struct {
-	ItemsAndKeyItems [13]struct{Item, KeyItem int}
-	WeaponsAndArmors [48]struct{ Weapon Weapon; Armor Armor }
-	PocketItems      [72]int
+	ItemsAndKeyItems [13]struct{ Item, KeyItem int }
+	WeaponsAndArmors [48]struct {
+		Weapon Weapon
+		Armor  Armor
+	}
+	PocketItems [72]int
 }
 
 type Save2 struct {
-	PlayerName        string
-	CharName          string
-	OtherNames        [5]string
-	Characters        [3]Character
-	Gold              int
-	XP                int
-	Level             int
-	Inv               int
-	Invc              int
-	Darkzone          int
-	CharactersStats   [5]CharacterStats2
-	BoltSpeed         int
-	Grazeamt          int
-	GrazeSize         int
-	Inventory         Inventory2
-	Tension           int
-	MaxTension        int
-	LightWorldStats   LightWorldStats
-	GlobalFlags       GlobalFlags
-	Plot              float64
-	Room              float64
-	Time              float64
+	PlayerName      string
+	CharName        string
+	OtherNames      [5]string
+	Characters      [3]Character
+	Gold            int
+	XP              int
+	Level           int
+	Inv             int
+	Invc            int
+	Darkzone        int
+	CharactersStats [5]CharacterStats2
+	BoltSpeed       int
+	Grazeamt        int
+	GrazeSize       int
+	Inventory       Inventory2
+	Tension         int
+	MaxTension      int
+	LightWorldStats LightWorldStats
+	GlobalFlags     GlobalFlags
+	Plot            float64
+	Room            float64
+	Time            float64
 }
 
 type Save3 Save2
@@ -212,103 +213,114 @@ func parseSaveLine(lines []string, cur int, kind reflect.Kind, v reflect.Value) 
 	switch kind {
 	case reflect.String:
 		if cur >= len(lines) {
-			return cur, ErrShortSaveFile
+			return cur, utils.ErrShortSaveFile
 		}
 		if !v.CanSet() {
-			return cur, ErrValueCannotBeSet
+			return cur, utils.ErrValueCannotBeSet
 		}
 		v.SetString(lines[cur])
 		cur++
 	case reflect.Bool:
 		if cur >= len(lines) {
-			return cur, ErrShortSaveFile
+			return cur, utils.ErrShortSaveFile
 		}
-	
+
 		if !v.CanSet() {
-			return cur, ErrValueCannotBeSet
+			return cur, utils.ErrValueCannotBeSet
 		}
 		num, err := strconv.Atoi(strings.Trim(lines[cur], " "))
 		if err != nil {
-			return cur, fmt.Errorf("%w: failed to parse to a boolean value %q", ErrWrongLineType, lines[cur])
+			return cur, fmt.Errorf("%w: failed to parse to a boolean value %q", utils.ErrWrongLineType, lines[cur])
 		}
-	
+
 		v.SetBool(num != 0)
 		cur++
 	case reflect.Int, reflect.Int8, reflect.Int16, reflect.Int32, reflect.Int64:
 		if cur >= len(lines) {
-			return cur, ErrShortSaveFile
+			return cur, utils.ErrShortSaveFile
 		}
-	
+
 		if !v.CanSet() {
-			return cur, ErrValueCannotBeSet
+			return cur, utils.ErrValueCannotBeSet
 		}
 
 		var bitSize int
 		switch kind {
-		case reflect.Int:   bitSize = 0
-		case reflect.Int8:  bitSize = 8
-		case reflect.Int16: bitSize = 16
-		case reflect.Int32: bitSize = 32
-		case reflect.Int64: bitSize = 64
+		case reflect.Int:
+			bitSize = 0
+		case reflect.Int8:
+			bitSize = 8
+		case reflect.Int16:
+			bitSize = 16
+		case reflect.Int32:
+			bitSize = 32
+		case reflect.Int64:
+			bitSize = 64
 		}
 
 		num, err := strconv.ParseInt(strings.Trim(lines[cur], " "), 10, bitSize)
 		if err != nil {
-			return cur, fmt.Errorf("%w: failed to parse to a signed integer value %q", ErrWrongLineType, lines[cur])
+			return cur, fmt.Errorf("%w: failed to parse to a signed integer value %q", utils.ErrWrongLineType, lines[cur])
 		}
-	
+
 		v.SetInt(int64(num))
 		cur++
 	case reflect.Uint, reflect.Uint8, reflect.Uint16, reflect.Uint32, reflect.Uint64:
 		if cur >= len(lines) {
-			return cur, ErrShortSaveFile
+			return cur, utils.ErrShortSaveFile
 		}
-		
+
 		if !v.CanSet() {
-			return cur, ErrValueCannotBeSet
+			return cur, utils.ErrValueCannotBeSet
 		}
 
 		var bitSize int
 		switch kind {
-		case reflect.Uint:   bitSize = 0
-		case reflect.Uint8:  bitSize = 8
-		case reflect.Uint16: bitSize = 16
-		case reflect.Uint32: bitSize = 32
-		case reflect.Uint64: bitSize = 64
+		case reflect.Uint:
+			bitSize = 0
+		case reflect.Uint8:
+			bitSize = 8
+		case reflect.Uint16:
+			bitSize = 16
+		case reflect.Uint32:
+			bitSize = 32
+		case reflect.Uint64:
+			bitSize = 64
 		}
-		
+
 		num, err := strconv.ParseUint(strings.Trim(lines[cur], " "), 10, bitSize)
 		if err != nil {
-			return cur, fmt.Errorf("%w: failed to parse to an unsigned integer value %q", ErrWrongLineType, lines[cur])
+			return cur, fmt.Errorf("%w: failed to parse to an unsigned integer value %q", utils.ErrWrongLineType, lines[cur])
 		}
-		
+
 		v.SetUint(uint64(num))
 		cur++
 	case reflect.Float32, reflect.Float64:
 		if cur >= len(lines) {
-			return cur, ErrShortSaveFile
+			return cur, utils.ErrShortSaveFile
 		}
-		
+
 		if !v.CanSet() {
-			return cur, ErrValueCannotBeSet
+			return cur, utils.ErrValueCannotBeSet
 		}
 
 		var bitSize int
 		switch kind {
-		case reflect.Float32: bitSize = 32
-		case reflect.Float64: bitSize = 64
+		case reflect.Float32:
+			bitSize = 32
+		case reflect.Float64:
+			bitSize = 64
 		}
 
 		num, err := strconv.ParseFloat(strings.Trim(lines[cur], " "), bitSize)
 		if err != nil {
-			return cur, fmt.Errorf("%w: failed to parse to a floating point number value %q", ErrWrongLineType, lines[cur])
+			return cur, fmt.Errorf("%w: failed to parse to a floating point number value %q", utils.ErrWrongLineType, lines[cur])
 		}
-		
+
 		v.SetFloat(float64(num))
 		cur++
 	case reflect.Struct:
-		for i := 0; i < v.NumField(); i++ {
-			fieldValue := v.Field(i)
+		for _, fieldValue := range v.Fields() {
 			fieldKind := fieldValue.Kind()
 
 			var err error
@@ -365,7 +377,7 @@ func LoadSave(path string, chapter int) (save Save, err error) {
 func ParseSaveReader(r io.Reader, chapter int) (save Save, err error) {
 	buf, err := io.ReadAll(r)
 	if err != nil {
-		return 
+		return
 	}
 	save, err = ParseSaveBytes(buf, chapter)
 	return
@@ -373,13 +385,18 @@ func ParseSaveReader(r io.Reader, chapter int) (save Save, err error) {
 
 func getExampleSaveBytesForChapter(chapter int) ([]byte, error) {
 	switch chapter {
-	case 1:  return chapter1bytes, nil
-	case 2:  return chapter2bytes, nil
-	case 3:  return chapter3bytes, nil
-	case 4:  return chapter4bytes, nil
-	case 5:  return chapter5bytes, nil
+	case 1:
+		return chapter1bytes, nil
+	case 2:
+		return chapter2bytes, nil
+	case 3:
+		return chapter3bytes, nil
+	case 4:
+		return chapter4bytes, nil
+	case 5:
+		return chapter5bytes, nil
 	}
-	return []byte{}, ErrChapterNotSupported
+	return []byte{}, utils.ErrChapterNotSupported
 }
 
 func Edit(s *Save, props map[string]string) error {

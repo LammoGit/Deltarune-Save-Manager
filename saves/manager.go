@@ -1,19 +1,24 @@
+// Package saves implements structs and functions needed to manage save files and save slots
 package saves
 
 import (
+	"dsm/utils"
 	"fmt"
 	"os"
+	"path/filepath"
 	"slices"
 	"strconv"
-	"path/filepath"
 )
 
+// SaveID is a type for a unique Save identifier
 type SaveID struct {
 	Name    string
 	Chapter int
 	SideB   bool
 }
 
+// String implements the Stringer interface for the SaveID type
+// returns the name of a save file with the given SaveID
 func (id SaveID) String() string {
 	if id.SideB {
 		return fmt.Sprintf("%d_a_%s", id.Chapter, id.Name)
@@ -22,12 +27,15 @@ func (id SaveID) String() string {
 	}
 }
 
+// SlotID is a type for a unique Slot identifier
 type SlotID struct {
 	Chapter int
 	Slot    int
 	SideB   bool
 }
 
+// String implements the Stringer interface for the SlotID type
+// returns the name of a save file with the given SlotID
 func (id SlotID) String() string {
 	if id.SideB {
 		return fmt.Sprintf("filech%d_%d_b", id.Chapter, id.Slot)
@@ -36,6 +44,9 @@ func (id SlotID) String() string {
 	}
 }
 
+// SaveManager respresents a deltarune save manager object
+// It holds pathes to the game saves and managed saves folder
+// Also includes saves and slots object, their hardlinks and DrINI
 type SaveManager struct {
 	ManagerPath string
 	SlotsPath   string
@@ -46,38 +57,47 @@ type SaveManager struct {
 	Dr          DrINI
 }
 
+// loadSaves returns a map of all managed saves and their hardlinks
 func loadSaves(dirPath string) (map[SaveID]Save, map[string][]SaveID, error) {
 	entries, err := os.ReadDir(dirPath)
 	if err != nil {
 		return nil, nil, err
 	}
-	
+
 	saves := make(map[SaveID]Save)
 	links := make(map[string][]SaveID)
 
 	for _, entry := range entries {
-		if entry.IsDir() { continue }
+		if entry.IsDir() {
+			continue
+		}
 
 		savePath := filepath.Join(dirPath, entry.Name())
 
-		match := saveRegex.FindStringSubmatch(entry.Name())
+		match := utils.SaveRegex.FindStringSubmatch(entry.Name())
 
 		if len(match) != 4 {
 			continue
 		}
 
 		chapter, err := strconv.Atoi(match[1])
-		if err != nil { continue }
+		if err != nil {
+			continue
+		}
 
 		sideB := match[2] != "a"
-		name  := match[3]
+		name := match[3]
 
 		save, err := LoadSave(savePath, chapter)
-		if err != nil { continue }
+		if err != nil {
+			continue
+		}
 
 		saveID := SaveID{name, chapter, sideB}
-		hardLinkID, err := getHardLinkID(savePath)
-		if err != nil { continue }
+		hardLinkID, err := utils.GetHardLinkID(savePath)
+		if err != nil {
+			continue
+		}
 
 		saves[saveID] = save
 		links[hardLinkID] = append(links[hardLinkID], saveID)
@@ -86,6 +106,7 @@ func loadSaves(dirPath string) (map[SaveID]Save, map[string][]SaveID, error) {
 	return saves, links, nil
 }
 
+// loadSaves returns a map of all game saves and their hardlinks
 func loadSlots(dirPath string) (map[SlotID]Save, map[string][]SlotID, error) {
 	entries, err := os.ReadDir(dirPath)
 	if err != nil {
@@ -96,30 +117,40 @@ func loadSlots(dirPath string) (map[SlotID]Save, map[string][]SlotID, error) {
 	links := make(map[string][]SlotID)
 
 	for _, entry := range entries {
-		if entry.IsDir() { continue }
+		if entry.IsDir() {
+			continue
+		}
 
 		slotPath := filepath.Join(dirPath, entry.Name())
-		
-		match := slotRegex.FindStringSubmatch(entry.Name())
-		
-		if len(match) != 4 { 
-			continue 
+
+		match := utils.SlotRegex.FindStringSubmatch(entry.Name())
+
+		if len(match) != 4 {
+			continue
 		}
-		
+
 		chapter, err := strconv.Atoi(match[1])
-		if err != nil { continue }
-		
+		if err != nil {
+			continue
+		}
+
 		slot, err := strconv.Atoi(match[2])
-		if err != nil { continue }
+		if err != nil {
+			continue
+		}
 
 		sideB := match[3] != ""
-		
+
 		save, err := LoadSave(slotPath, chapter)
-		if err != nil { continue }
-		
-		slotID := SlotID{ chapter, slot, sideB }
-		hardLinkID, err := getHardLinkID(slotPath)
-		if err != nil { continue }
+		if err != nil {
+			continue
+		}
+
+		slotID := SlotID{chapter, slot, sideB}
+		hardLinkID, err := utils.GetHardLinkID(slotPath)
+		if err != nil {
+			continue
+		}
 
 		slots[slotID] = save
 		links[hardLinkID] = append(links[hardLinkID], slotID)
@@ -128,6 +159,7 @@ func loadSlots(dirPath string) (map[SlotID]Save, map[string][]SlotID, error) {
 	return slots, links, nil
 }
 
+// NewSaveManager creates a new SaveManager object
 func NewSaveManager(managerPath, slotsPath string) (sm *SaveManager, err error) {
 	saves, saveLinks, err := loadSaves(managerPath)
 	if err != nil {
@@ -138,13 +170,13 @@ func NewSaveManager(managerPath, slotsPath string) (sm *SaveManager, err error) 
 	if err != nil {
 		return
 	}
-	
+
 	dr, err := NewDrINI(filepath.Join(slotsPath, "dr.ini"))
 	if err != nil {
 		return
 	}
-	
-	sm = &SaveManager {
+
+	sm = &SaveManager{
 		ManagerPath: managerPath,
 		SlotsPath:   slotsPath,
 		Saves:       saves,
@@ -157,6 +189,8 @@ func NewSaveManager(managerPath, slotsPath string) (sm *SaveManager, err error) 
 }
 
 /* Utils */
+
+// hardLinkIDFromSaveID returns ID of the hardlink of the managed save file with the given ID
 func (sm *SaveManager) hardLinkIDFromSaveID(id SaveID) (string, bool) {
 	for hardLinkID, saveID := range sm.SaveLinks {
 		if slices.Contains(saveID, id) {
@@ -166,6 +200,7 @@ func (sm *SaveManager) hardLinkIDFromSaveID(id SaveID) (string, bool) {
 	return "", false
 }
 
+// hardLinkIDFromSlotID returns ID of the hardlink of the game save file with the given ID
 func (sm *SaveManager) hardLinkIDFromSlotID(id SlotID) (string, bool) {
 	for hardLinkID, slotID := range sm.SlotLinks {
 		if slices.Contains(slotID, id) {
@@ -176,34 +211,41 @@ func (sm *SaveManager) hardLinkIDFromSlotID(id SlotID) (string, bool) {
 }
 
 /* Manage Saves */
+
+// Create creates a new save file with given name and chapter
+// uses standard saves started directly from the given chapter
 func (sm *SaveManager) Create(name string, chapter int) error {
-	if chapter > MAX_CHAPTER {
-		return ErrChapterNotSupported
+	// If chapter is higher than maximum allowed, then return an error
+	if chapter > utils.MAXCHAPTER {
+		return utils.ErrChapterNotSupported
 	}
-	
+
+	// If name of save is empty, then return an error
 	if name == "" {
-		return ErrEmptySaveName
+		return utils.ErrEmptySaveName
 	}
-	
+
+	// Create a new save file and return error if it exists
 	saveID := SaveID{Name: name, Chapter: chapter}
 	path := filepath.Join(sm.ManagerPath, saveID.String())
-	file, err := os.OpenFile(path, os.O_WRONLY | os.O_CREATE | os.O_EXCL, 0644)
+	file, err := os.OpenFile(path, os.O_WRONLY|os.O_CREATE|os.O_EXCL, 0644)
 	if err != nil {
 		return err
 	}
 	defer file.Close()
 
+	//
 	content, err := getExampleSaveBytesForChapter(chapter)
 	if err != nil {
 		return err
 	}
-	
+
 	_, err = file.Write(content)
 	if err != nil {
 		return err
 	}
 
-	hardLinkID, err := getHardLinkID(path)
+	hardLinkID, err := utils.GetHardLinkID(path)
 	if err != nil {
 		return err
 	}
@@ -217,6 +259,7 @@ func (sm *SaveManager) Create(name string, chapter int) error {
 	return nil
 }
 
+// Swap swaps names of the two saves having given names
 func (sm *SaveManager) Swap(name1, name2 string, chapter int) error {
 	saveID1 := SaveID{Name: name1, Chapter: chapter}
 	saveID2 := SaveID{Name: name2, Chapter: chapter}
@@ -225,10 +268,9 @@ func (sm *SaveManager) Swap(name1, name2 string, chapter int) error {
 	path2 := filepath.Join(sm.ManagerPath, saveID2.String())
 
 	// If at least one doesn't exist return an error
-	if !fileExists(path1) || !fileExists(path2) {
-		return ErrSaveNotExist
+	if !utils.FileExists(path1) || !utils.FileExists(path2) {
+		return utils.ErrSaveNotExist
 	}
-
 
 	hardLinkID1, _ := sm.hardLinkIDFromSaveID(saveID1)
 	hardLinkID2, _ := sm.hardLinkIDFromSaveID(saveID2)
@@ -239,7 +281,7 @@ func (sm *SaveManager) Swap(name1, name2 string, chapter int) error {
 	}
 
 	// Get a temporary path
-	tmpPath, err := tempFilePath(sm.ManagerPath)
+	tmpPath, err := utils.TempFilePath(sm.ManagerPath)
 	if err != nil {
 		return err
 	}
@@ -271,8 +313,8 @@ func (sm *SaveManager) Swap(name1, name2 string, chapter int) error {
 	sm.Saves[saveID2] = tmpSave
 
 	// Remove old save identifiers from saves' hard links map
-	sm.SaveLinks[hardLinkID1] = deleteEqual(sm.SaveLinks[hardLinkID1], saveID1)
-	sm.SaveLinks[hardLinkID2] = deleteEqual(sm.SaveLinks[hardLinkID2], saveID2)
+	sm.SaveLinks[hardLinkID1] = utils.DeleteEqual(sm.SaveLinks[hardLinkID1], saveID1)
+	sm.SaveLinks[hardLinkID2] = utils.DeleteEqual(sm.SaveLinks[hardLinkID2], saveID2)
 
 	// Add new save identifiers to saves' hard links map
 	sm.SaveLinks[hardLinkID1] = append(sm.SaveLinks[hardLinkID1], saveID2)
@@ -281,6 +323,8 @@ func (sm *SaveManager) Swap(name1, name2 string, chapter int) error {
 	return nil
 }
 
+// SetSlot sets save by given name and chapter to slot for the given chapter and index
+// if eraseUnmanaged is true, then allows to delete unmanaged slots, i.e. losing them forever
 func (sm *SaveManager) SetSlot(name string, chapter, slot int, eraseUnmanaged bool) error {
 	saveID := SaveID{Name: name, Chapter: chapter}
 	savePath := filepath.Join(sm.ManagerPath, saveID.String())
@@ -290,34 +334,35 @@ func (sm *SaveManager) SetSlot(name string, chapter, slot int, eraseUnmanaged bo
 
 	saveHardLink, ok := sm.hardLinkIDFromSaveID(saveID)
 	if !ok {
-		return ErrSaveNotExist
+		return utils.ErrSaveNotExist
 	}
 
 	slotHardLink, slotExist := sm.hardLinkIDFromSlotID(slotID)
-	// if slotExist && saveHardLink == slotHardLink {
-	// 	return nil
-	// }
 
 	// Get saves pointing to the same space in memory
 	saves, ok := sm.SaveLinks[slotHardLink]
-	
-	// If slot exists, doesn't have linked saves and
-	// it's not allowed to delete unlinked slots, than return error
+
+	// If slot exists, slot doesn't have linked saves and
+	// it isn't allowed to remove unmanaged saves, then return an error
 	if slotExist && (!ok || len(saves) == 0) && !eraseUnmanaged {
-		return fmt.Errorf("Slot is already taken by an unmanaged save")
+		return utils.ErrTakenByUnmanagedSave
 	}
 
 	// Make slot link to the given save file
-	err := relink(slotPath, savePath)
+	err := utils.Relink(slotPath, savePath)
 	if err != nil {
 		return err
 	}
+
 	// Update slot object
 	sm.Slots[slotID], _ = LoadSave(slotPath, chapter)
+
 	// Remove slot identifier from the old hard link
-	sm.SlotLinks[slotHardLink] = deleteEqual(sm.SlotLinks[slotHardLink], slotID)
+	sm.SlotLinks[slotHardLink] = utils.DeleteEqual(sm.SlotLinks[slotHardLink], slotID)
+
 	// Add slot identifier to the new hard link
 	sm.SlotLinks[saveHardLink] = append(sm.SlotLinks[saveHardLink], slotID)
+
 	// Update dr.ini
 	sm.Dr.SetSlotFromSave(
 		sm.Slots[slotID],
@@ -329,6 +374,8 @@ func (sm *SaveManager) SetSlot(name string, chapter, slot int, eraseUnmanaged bo
 	return nil
 }
 
+// UnsetSlot clears up slot with the given chapter and slot index
+// if eraseUnmanaged is true, then removes slot unmanaged save file, i.e. looses it forever
 func (sm *SaveManager) UnsetSlot(chapter, slot int, eraseUnmanaged bool) error {
 	slotID := SlotID{Chapter: chapter, Slot: slot}
 	slotPath := filepath.Join(sm.SlotsPath, slotID.String())
@@ -342,10 +389,10 @@ func (sm *SaveManager) UnsetSlot(chapter, slot int, eraseUnmanaged bool) error {
 	// Get saves pointing to the same space in memory
 	saves, ok := sm.SaveLinks[slotHardLink]
 
-	// If slot exist, doessn't have linked saves and
-	// it's not allowed to delete unlinked slots, than return error
+	// If slot doesn't have linked saves and it isn't allowed to remove unmanaged saves,
+	// then return an error
 	if (!ok || len(saves) == 0) && !eraseUnmanaged {
-		return fmt.Errorf("Slot is taken by an unmanaged save")
+		return utils.ErrTakenByUnmanagedSave
 	}
 
 	// Remove the slot file
@@ -357,7 +404,7 @@ func (sm *SaveManager) UnsetSlot(chapter, slot int, eraseUnmanaged bool) error {
 	delete(sm.Slots, slotID)
 
 	// Remove slot identifier from the hard link map
-	sm.SlotLinks[slotHardLink] = deleteEqual(sm.SlotLinks[slotHardLink], slotID)
+	sm.SlotLinks[slotHardLink] = utils.DeleteEqual(sm.SlotLinks[slotHardLink], slotID)
 
 	// Update dr.ini
 	sm.Dr.RemoveSlot(
@@ -368,13 +415,13 @@ func (sm *SaveManager) UnsetSlot(chapter, slot int, eraseUnmanaged bool) error {
 	return nil
 }
 
+// SaveSlot creates and links a managed save file for the specified slot
 func (sm *SaveManager) SaveSlot(name string, chapter, slot int) error {
 	saveID := SaveID{Name: name, Chapter: chapter}
 	savePath := filepath.Join(sm.ManagerPath, saveID.String())
 
 	slotID := SlotID{Chapter: chapter, Slot: slot}
 	slotPath := filepath.Join(sm.SlotsPath, slotID.String())
-
 
 	slotHardLink, ok := sm.hardLinkIDFromSlotID(slotID)
 	// If slot file doesn't exist just exit
@@ -383,10 +430,10 @@ func (sm *SaveManager) SaveSlot(name string, chapter, slot int) error {
 	}
 
 	// If save file name is already taken, then return error
-	if fileExists(savePath) {
-		return ErrSaveNameIsTaken
+	if utils.FileExists(savePath) {
+		return utils.ErrSaveNameIsTaken
 	}
-	
+
 	// Create a new save file linking to the same memory space
 	// as the slot
 	err := os.Link(slotPath, savePath)
@@ -403,6 +450,8 @@ func (sm *SaveManager) SaveSlot(name string, chapter, slot int) error {
 	return nil
 }
 
+// Remove removes the specified managed save
+// if removeSlots is specified, then removes all linked slots
 func (sm *SaveManager) Remove(name string, chapter int, removeSlots bool) error {
 	saveID := SaveID{Name: name, Chapter: chapter}
 	savePath := filepath.Join(sm.ManagerPath, saveID.String())
@@ -410,7 +459,7 @@ func (sm *SaveManager) Remove(name string, chapter int, removeSlots bool) error 
 	saveHardLink, ok := sm.hardLinkIDFromSaveID(saveID)
 	// If save file doesn't exist just exit
 	if !ok {
-		return ErrSaveNotExist
+		return utils.ErrSaveNotExist
 	}
 
 	// Remove the save file
@@ -423,7 +472,7 @@ func (sm *SaveManager) Remove(name string, chapter int, removeSlots bool) error 
 	delete(sm.Saves, saveID)
 
 	// Remove save identifier from the hard link map
-	sm.SaveLinks[saveHardLink] = deleteEqual(sm.SaveLinks[saveHardLink], saveID)
+	sm.SaveLinks[saveHardLink] = utils.DeleteEqual(sm.SaveLinks[saveHardLink], saveID)
 
 	// Remove all linked slots if required
 	if removeSlots {
@@ -446,6 +495,7 @@ func (sm *SaveManager) Remove(name string, chapter int, removeSlots bool) error 
 	return nil
 }
 
+// Rename renames a managed save
 func (sm *SaveManager) Rename(nameFrom, nameTo string, chapter int) error {
 	saveIDFrom := SaveID{Name: nameFrom, Chapter: chapter}
 	saveIDTo := SaveID{Name: nameTo, Chapter: chapter}
@@ -456,12 +506,12 @@ func (sm *SaveManager) Rename(nameFrom, nameTo string, chapter int) error {
 	saveHardLink, ok := sm.hardLinkIDFromSaveID(saveIDFrom)
 	// If save file doesn't exist return an error
 	if !ok {
-		return ErrSaveNotExist
+		return utils.ErrSaveNotExist
 	}
 
 	// If save name is already taken return an error
-	if fileExists(savePathTo) {
-		return ErrSaveNameIsTaken
+	if utils.FileExists(savePathTo) {
+		return utils.ErrSaveNameIsTaken
 	}
 
 	// Rename the save file
@@ -475,7 +525,7 @@ func (sm *SaveManager) Rename(nameFrom, nameTo string, chapter int) error {
 	delete(sm.Saves, saveIDFrom)
 
 	// Remove old save identifier from the hard link map
-	sm.SaveLinks[saveHardLink] = deleteEqual(sm.SaveLinks[saveHardLink], saveIDFrom)
+	sm.SaveLinks[saveHardLink] = utils.DeleteEqual(sm.SaveLinks[saveHardLink], saveIDFrom)
 
 	// Add new save identifier to the hard link map
 	sm.SaveLinks[saveHardLink] = append(sm.SaveLinks[saveHardLink], saveIDTo)
@@ -483,6 +533,7 @@ func (sm *SaveManager) Rename(nameFrom, nameTo string, chapter int) error {
 	return nil
 }
 
+// Copy create a copy of the save
 func (sm *SaveManager) Copy(nameFrom, nameTo string, chapter int) error {
 	saveIDFrom := SaveID{Name: nameFrom, Chapter: chapter}
 	saveIDTo := SaveID{Name: nameTo, Chapter: chapter}
@@ -491,13 +542,13 @@ func (sm *SaveManager) Copy(nameFrom, nameTo string, chapter int) error {
 	savePathTo := filepath.Join(sm.ManagerPath, saveIDTo.String())
 
 	// If save file doesn't exist return an error
-	if !fileExists(savePathFrom) {
-		return ErrSaveNotExist
+	if !utils.FileExists(savePathFrom) {
+		return utils.ErrSaveNotExist
 	}
 
 	// If save name is already taken return an error
-	if fileExists(savePathTo) {
-		return ErrSaveNameIsTaken
+	if utils.FileExists(savePathTo) {
+		return utils.ErrSaveNameIsTaken
 	}
 
 	// Create a copy save file
@@ -514,9 +565,9 @@ func (sm *SaveManager) Copy(nameFrom, nameTo string, chapter int) error {
 	defer fileTo.Close()
 
 	fileFrom.WriteTo(fileTo)
-	
+
 	// Load save object
-	_, err 	= fileFrom.Seek(0, 0)
+	_, err = fileFrom.Seek(0, 0)
 	if err != nil {
 		return err
 	}
@@ -525,12 +576,12 @@ func (sm *SaveManager) Copy(nameFrom, nameTo string, chapter int) error {
 	if err != nil {
 		return err
 	}
-	
+
 	// Add new save object to the saves map
 	sm.Saves[saveIDTo] = save
-	
+
 	// Add new save identifier to the hard link map
-	saveHardLink, err := getHardLinkID(savePathTo)
+	saveHardLink, err := utils.GetHardLinkID(savePathTo)
 	if err != nil {
 		return err
 	}
@@ -539,11 +590,12 @@ func (sm *SaveManager) Copy(nameFrom, nameTo string, chapter int) error {
 	return nil
 }
 
+// Edit changes given in the map properties of the specified save
 func (sm *SaveManager) Edit(name string, chapter int, props map[string]string) error {
 	saveID := SaveID{Name: name, Chapter: chapter}
 	save, ok := sm.Saves[saveID]
 	if !ok {
-		return ErrSaveNotExist
+		return utils.ErrSaveNotExist
 	}
 	return Edit(&save, props)
 }

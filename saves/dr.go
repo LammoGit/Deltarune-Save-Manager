@@ -4,22 +4,33 @@ import (
 	"bytes"
 	"fmt"
 	"os"
-	"regexp"
 	"strconv"
 
 	"dsm/ini"
+	"dsm/utils"
 )
 
-var slotectionLabelRegex = regexp.MustCompile(`G(?:[2-7]_)?\d+`)
-
+// SlotDr type represents a save slot section in dr.ini
 type SlotDr ini.INISection
 
+// DrINI type represents the dr.ini file
+// it holds data of the dr.ini and path to it
 type DrINI struct {
 	ini.INI
 	Path string
 }
 
-func NewDrINI(path string) (dr DrINI, err error){
+// chapterIndexToKey generates a save slot section label
+// from its chapter and index
+func chapterIndexToKey(chapter, index int) string {
+	if chapter == 1 {
+		return fmt.Sprintf("G%d", index)
+	}
+	return fmt.Sprintf("G%d_%d", chapter, index)
+}
+
+// NewDrINI creates a new DrINI object
+func NewDrINI(path string) (dr DrINI, err error) {
 	content, err := os.ReadFile(path)
 	if err != nil {
 		return
@@ -33,14 +44,17 @@ func NewDrINI(path string) (dr DrINI, err error){
 	return
 }
 
+// Clean removes all empty saves
 func (dr *DrINI) Clean() {
 	for label, section := range dr.INI {
-		if name, ok := section["Name"];ok && name == "[EMPTY]" {
+		if name, ok := section["Name"]; ok && name == "[EMPTY]" {
 			delete(dr.INI, label)
 		}
 	}
 }
 
+// GetSlot returns a save slot section from the dr.ini file
+// given its chapter and index
 func (dr *DrINI) GetSlot(chapter, index int) (slot *SlotDr, ok bool) {
 	key := chapterIndexToKey(chapter, index)
 	val, ok := dr.INI[key]
@@ -50,21 +64,23 @@ func (dr *DrINI) GetSlot(chapter, index int) (slot *SlotDr, ok bool) {
 	return
 }
 
+// GetSlots returns all save slot sections from the dr.ini file
 func (dr *DrINI) GetSlots() (slots []*SlotDr) {
 	for label, slot := range dr.INI {
-		if slotectionLabelRegex.MatchString(label) {
+		if utils.SlotSectionLabelRegex.MatchString(label) {
 			slots = append(slots, (*SlotDr)(&slot))
 		}
 	}
 	return
 }
 
+// SetSlot sets a save slot with given slot and index
 func (dr *DrINI) SetSlot(slot SlotDr, index int) bool {
 	chapterS, ok := slot["Chapter"]
 	if !ok {
 		return false
 	}
-	
+
 	chapter, err := strconv.Atoi(chapterS)
 	if err != nil {
 		return false
@@ -78,6 +94,8 @@ func (dr *DrINI) SetSlot(slot SlotDr, index int) bool {
 	return true
 }
 
+// SetSlotFromSave sets a save slot at given chapter and index by setting sector data
+// using given save. Replaces previous save when replace is set to true
 func (dr *DrINI) SetSlotFromSave(save Save, chapter int, index int, replace bool) bool {
 	if !replace {
 		if _, ok := dr.GetSlot(chapter, index); ok {
@@ -112,6 +130,7 @@ func (dr *DrINI) SetSlotFromSave(save Save, chapter int, index int, replace bool
 	return true
 }
 
+// CopySlot copies a save slot data from one slot to another
 func (dr *DrINI) CopySlot(chapter, indexFrom, indexTo int) bool {
 	keyTo := chapterIndexToKey(chapter, indexTo)
 	if _, ok := dr.INI[keyTo]; ok {
@@ -129,6 +148,7 @@ func (dr *DrINI) CopySlot(chapter, indexFrom, indexTo int) bool {
 	return true
 }
 
+// MoveSlot moves a save slot data from one slot to another
 func (dr *DrINI) MoveSlot(chapter, indexFrom, indexTo int) bool {
 	keyTo := chapterIndexToKey(chapter, indexTo)
 	if _, ok := dr.INI[keyTo]; ok {
@@ -147,6 +167,7 @@ func (dr *DrINI) MoveSlot(chapter, indexFrom, indexTo int) bool {
 	return true
 }
 
+// SwapSlots swaps save slot data of two slots
 func (dr *DrINI) SwapSlots(chapter, index1, index2 int) bool {
 	key1 := chapterIndexToKey(chapter, index1)
 	slot1, ok := dr.INI[key1]
@@ -166,12 +187,14 @@ func (dr *DrINI) SwapSlots(chapter, index1, index2 int) bool {
 	return true
 }
 
+// RemoveSlot removes a save slot from the dr.ini
 func (dr *DrINI) RemoveSlot(chapter, index int) {
 	key := chapterIndexToKey(chapter, index)
 	delete(dr.INI, key)
 	dr.Write()
 }
 
+// Write writes current contents of the DrINI object to the dr.ini file
 func (dr *DrINI) Write() error {
 	file, err := os.OpenFile(dr.Path, os.O_WRONLY|os.O_CREATE|os.O_TRUNC, 0666)
 	if err != nil {
@@ -180,11 +203,4 @@ func (dr *DrINI) Write() error {
 	defer file.Close()
 	err = dr.INI.Write(file, true)
 	return err
-}
-
-func chapterIndexToKey(chapter, index int) string {
-	if chapter == 1 {
-		return fmt.Sprintf("G%d", index)
-	}
-	return fmt.Sprintf("G%d_%d", chapter, index)
 }

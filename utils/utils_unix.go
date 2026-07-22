@@ -1,6 +1,6 @@
 //go:build !windows
 
-package saves
+package utils
 
 import (
 	"fmt"
@@ -8,7 +8,8 @@ import (
 	"syscall"
 )
 
-func getHardLinkID(path string) (string, error) {
+// GetHardLinkID returns the string representing unique hardlink identifier
+func GetHardLinkID(path string) (string, error) {
 	fi, err := os.Stat(path)
 	if err != nil {
 		return "", err

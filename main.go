@@ -2,62 +2,45 @@ package main
 
 import (
 	"context"
-	"runtime"
-	"path"
 	"fmt"
-	"os"
-	"slices"
 	"maps"
+	"os"
+	"path/filepath"
+	"slices"
 
 	"github.com/urfave/cli/v3"
 
 	"dsm/saves"
-)
-
-func getSavesFolderPath() (dirPath string, err error) {
-	if runtime.GOOS == "windows" {
-		dirPath, err = os.UserCacheDir()
-		dirPath = path.Join(dirPath, "DELTARUNE")
-	}
-	return
-}
-
-func dirExist(dirPath string) bool {
-	info, err := os.Stat(dirPath)
-	if err != nil {
-		return false
-	}
-	return info.IsDir()
-}
-
-var (
-	dirPath string
+	"dsm/utils"
 )
 
 func main() {
-	dirPath, err := getSavesFolderPath()
+	// Get Deltarune saves folder
+	dirPath, err := utils.GetSavesFolderPath()
 	if err != nil {
 		fmt.Println(err)
 		return
 	}
 
-	manager, err := saves.NewSaveManager(path.Join(dirPath, "save-manager"), dirPath)
+	// Create a save manager object
+	manager, err := saves.NewSaveManager(filepath.Join(dirPath, "save-manager"), dirPath)
 	if err != nil {
 		fmt.Println(err)
 		return
 	}
 
+	// CLI-utility description
 	cmd := &cli.Command{
 		Commands: []*cli.Command{
 			{
-				Name: "save",
+				Name:    "save",
 				Aliases: []string{},
-				Usage: "commands for managing save files",
+				Usage:   "commands for managing save files",
 				Commands: []*cli.Command{
 					{
-						Name: "create",
+						Name:    "create",
 						Aliases: []string{},
-						Usage: "create new save file with standard properties",
+						Usage:   "create new save file with standard properties",
 						Arguments: []cli.Argument{
 							&cli.StringArg{
 								Name: "save name",
@@ -71,19 +54,16 @@ func main() {
 								cmd.StringArg("save name"),
 								cmd.IntArg("chapter"),
 							)
-							if err != nil {
-								fmt.Println(err)
-							}
-							return nil
+							return err
 						},
 					},
 					{
-						Name: "remove",
+						Name:    "remove",
 						Aliases: []string{},
-						Usage: "remove a save file with or without connected slots",
+						Usage:   "remove a save file with or without connected slots",
 						Flags: []cli.Flag{
 							&cli.BoolFlag{
-								Name: "remove-slots",
+								Name:    "remove-slots",
 								Aliases: []string{"slots", "cascade"},
 							},
 						},
@@ -101,19 +81,16 @@ func main() {
 								cmd.IntArg("chapter"),
 								cmd.Bool("remove-slots"),
 							)
-							if err != nil {
-								fmt.Println(err)
-							}
-							return nil	
+							return err
 						},
 					},
 					{
-						Name: "set",
+						Name:    "set",
 						Aliases: []string{},
-						Usage: "set a save file in given save slot",
+						Usage:   "set a save file in given save slot",
 						Flags: []cli.Flag{
 							&cli.BoolFlag{
-								Name: "erase-unmanaged",
+								Name:    "erase-unmanaged",
 								Aliases: []string{"unmanaged"},
 							},
 						},
@@ -135,16 +112,13 @@ func main() {
 								cmd.IntArg("slot"),
 								cmd.Bool("erase-unmanaged"),
 							)
-							if err != nil {
-								fmt.Println(err)
-							}
-							return nil
+							return err
 						},
 					},
 					{
-						Name: "rename",
+						Name:    "rename",
 						Aliases: []string{},
-						Usage: "rename a save file",
+						Usage:   "rename a save file",
 						Arguments: []cli.Argument{
 							&cli.StringArg{
 								Name: "save name from",
@@ -162,16 +136,13 @@ func main() {
 								cmd.StringArg("save name to"),
 								cmd.IntArg("chapter"),
 							)
-							if err != nil {
-								fmt.Println(err)
-							}
-							return nil	
+							return err
 						},
 					},
 					{
-						Name: "swap",
+						Name:    "swap",
 						Aliases: []string{},
-						Usage: "swap names of two save files",
+						Usage:   "swap names of two save files",
 						Arguments: []cli.Argument{
 							&cli.StringArg{
 								Name: "first save name",
@@ -189,16 +160,13 @@ func main() {
 								cmd.StringArg("second save name"),
 								cmd.IntArg("chapter"),
 							)
-							if err != nil {
-								fmt.Println(err)
-							}
-							return nil
+							return err
 						},
 					},
 					{
-						Name: "copy",
+						Name:    "copy",
 						Aliases: []string{},
-						Usage: "create a copy of a save file",
+						Usage:   "create a copy of a save file",
 						Arguments: []cli.Argument{
 							&cli.StringArg{
 								Name: "save name from",
@@ -216,31 +184,28 @@ func main() {
 								cmd.StringArg("save name to"),
 								cmd.IntArg("chapter"),
 							)
-							if err != nil {
-								fmt.Println(err)
-							}
-							return nil	
+							return err
 						},
 					},
 					{
-						Name: "edit",
+						Name:    "edit",
 						Aliases: []string{},
-						Usage: "change properties of a save file",
+						Usage:   "change properties of a save file",
 						Action: func(ctx context.Context, cmd *cli.Command) error {
-							return nil	
+							return nil
 						},
 					},
 				},
 			},
 			{
-				Name: "slot",
+				Name:    "slot",
 				Aliases: []string{},
-				Usage: "commands for managing save slots",
+				Usage:   "commands for managing save slots",
 				Commands: []*cli.Command{
 					{
-						Name: "save",
+						Name:    "save",
 						Aliases: []string{},
-						Usage: "create a save file of a slot",
+						Usage:   "create a save file of a slot",
 						Arguments: []cli.Argument{
 							&cli.StringArg{
 								Name: "save name",
@@ -258,20 +223,17 @@ func main() {
 								cmd.IntArg("chapter"),
 								cmd.IntArg("slot"),
 							)
-							if err != nil {
-								fmt.Println(err)
-							}
-							return nil
+							return err
 						},
 					},
 					{
-						Name: "unset",
+						Name:    "unset",
 						Aliases: []string{},
-						Usage: "remove save slot, but keep save file",
+						Usage:   "remove save slot, but keep save file",
 						Flags: []cli.Flag{
 							&cli.BoolFlag{
-								Name: "erase-unmanaged",
-								Usage: "remove slots without a linked save file",
+								Name:    "erase-unmanaged",
+								Usage:   "remove slots without a linked save file",
 								Aliases: []string{"unmanaged"},
 							},
 						},
@@ -289,37 +251,36 @@ func main() {
 								cmd.IntArg("slot"),
 								cmd.Bool("erase-unmanaged"),
 							)
-							if err != nil {
-								fmt.Println(err)
-							}
-							return nil
+							return err
 						},
 					},
 				},
 			},
 			{
-				Name: "saves",
+				Name:    "saves",
 				Aliases: []string{},
-				Usage: "list all save files",
+				Usage:   "list all save files",
 				Action: func(ctx context.Context, cmd *cli.Command) error {
 					for id := range manager.Saves {
 						fmt.Printf("Chapter %d - %s\n", id.Chapter, id.Name)
 					}
-					return nil	
+					return nil
 				},
 			},
 			{
-				Name: "slots",
+				Name:    "slots",
 				Aliases: []string{},
-				Usage: "list all save slots",
+				Usage:   "list all save slots",
 				Action: func(ctx context.Context, cmd *cli.Command) error {
 					keys := slices.Collect(maps.Keys(manager.Slots))
 					slices.SortFunc(
 						keys,
 						func(a, b saves.SlotID) int {
-							if a.Chapter == b.Chapter && a.Slot == b.Slot { return 0}
+							if a.Chapter == b.Chapter && a.Slot == b.Slot {
+								return 0
+							}
 							if a.Chapter < b.Chapter ||
-								   (a.Chapter == b.Chapter && a.Slot < b.Slot) {
+								(a.Chapter == b.Chapter && a.Slot < b.Slot) {
 								return -1
 							}
 							return 1
@@ -352,6 +313,7 @@ func main() {
 		},
 	}
 
+	// Run CLI-utility
 	if err := cmd.Run(context.Background(), os.Args); err != nil {
 		fmt.Println(err)
 	}
