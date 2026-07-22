@@ -31,33 +31,6 @@ var chapter5bytes []byte
 
 /* Type defenitions */
 
-//go:generate stringer -type=Character -trimprefix=Character
-type Character int
-
-const (
-	CharacterRalsei Character = iota
-	CharacterKris
-	CharacterSusie
-	CharacterRalseiWithHat
-	CharacterNoelle
-)
-
-type Weapon int
-
-const ()
-
-type Armor int
-
-const ()
-
-type Spell int
-
-const ()
-
-type Element int
-
-const ()
-
 type ItemStats struct {
 	Attack    int
 	Defence   int
@@ -83,21 +56,9 @@ type CharacterStats struct {
 	Spells      [12]Spell
 }
 
-type InventorySlot struct {
-	Item    int
-	KeyItem int
-	Weapon  int
-	Armor   int
-}
-
-type ItemAndPhoneSlot struct {
-	Item  int
-	Phone int
-}
-
 type LightWorldStats struct {
-	Weapon         int
-	Armor          int
+	Weapon         LItem
+	Armor          LItem
 	XP             int
 	Level          int
 	Gold           int
@@ -107,7 +68,10 @@ type LightWorldStats struct {
 	Defence        int
 	WeaponStrength int
 	ArmorDefence   int
-	Inventory      [8]ItemAndPhoneSlot
+	Inventory      [8]struct {
+		Item  LItem
+		Phone Phone
+	}
 }
 
 type GlobalFlags struct {
@@ -115,29 +79,34 @@ type GlobalFlags struct {
 }
 
 type Save1 struct {
-	PlayerName        string
-	CharName          string
-	OtherNames        [5]string
-	Characters        [3]Character
-	Gold              int
-	XP                int
-	Level             int
-	Inv               int
-	Invc              int
-	Darkzone          bool
-	CharactersStats   [4]CharacterStats
-	BoltSpeed         int
-	Grazeamt          int
-	GrazeSize         int
-	Inventory         [13]InventorySlot
-	Tension           int
-	MaxTension        int
-	LightWorldStats   LightWorldStats
-	GlobalFlags       GlobalFlags
-	UnusedGlobalFlags [7499]string
-	Plot              float64
-	Room              float64
-	Time              float64
+	PlayerName      string
+	CharName        string
+	OtherNames      [5]string
+	Characters      [3]Character
+	Gold            int
+	XP              int
+	Level           int
+	Inv             int
+	Invc            int
+	Darkzone        bool
+	CharactersStats [4]CharacterStats
+	BoltSpeed       int
+	Grazeamt        int
+	GrazeSize       int
+	Inventory       [13]struct {
+		Item    Item
+		KeyItem KeyItem
+		Weapon  Weapon
+		Armor   Armor
+	}
+	Tension          int
+	MaxTension       int
+	LightWorldStats  LightWorldStats
+	GlobalFlags      GlobalFlags
+	ExtraGlobalFlags [7499]string
+	Plot             float64
+	Room             float64
+	Time             float64
 }
 
 type ItemStats2 struct {
@@ -168,12 +137,15 @@ type CharacterStats2 struct {
 }
 
 type Inventory2 struct {
-	ItemsAndKeyItems [13]struct{ Item, KeyItem int }
+	ItemsAndKeyItems [13]struct {
+		Item    Item
+		KeyItem KeyItem
+	}
 	WeaponsAndArmors [48]struct {
 		Weapon Weapon
 		Armor  Armor
 	}
-	PocketItems [72]int
+	PocketItems [72]Item // Items in the storage
 }
 
 type Save2 struct {
@@ -186,7 +158,7 @@ type Save2 struct {
 	Level           int
 	Inv             int
 	Invc            int
-	Darkzone        int
+	Darkzone        bool
 	CharactersStats [5]CharacterStats2
 	BoltSpeed       int
 	Grazeamt        int
@@ -207,7 +179,26 @@ type Save4 Save2
 
 type Save5 Save2
 
-type Save any
+type Save interface {
+	String() string
+	Edit(props map[string]string) error
+}
+
+func (s *Save1) String() string {
+	return fmt.Sprintf("%+v", *s)
+}
+
+func (s *Save1) Edit(props map[string]string) error {
+	return nil
+}
+
+func (s *Save2) String() string {
+	return fmt.Sprintf("%+v", *s)
+}
+
+func (s *Save2) Edit(props map[string]string) error {
+	return nil
+}
 
 func parseSaveLine(lines []string, cur int, kind reflect.Kind, v reflect.Value) (int, error) {
 	switch kind {
@@ -348,21 +339,19 @@ func ParseSaveBytes(buf []byte, chapter int) (Save, error) {
 
 	lines := strings.Split(text, "\n")
 
+	var save Save
+	var err error
 	switch chapter {
 	case 1:
-		save := Save1{}
-		saveValue := reflect.ValueOf(&save).Elem()
-		_, err := parseSaveLine(lines, 0, saveValue.Kind(), saveValue)
-		return save, err
+		save = &Save1{}
+	case 2, 3, 4, 5:
+		save = &Save2{}
 	default:
-		save := Save2{}
-		saveValue := reflect.ValueOf(&save).Elem()
-		_, err := parseSaveLine(lines, 0, saveValue.Kind(), saveValue)
-		if err != nil {
-			fmt.Printf("%d, %s\n", chapter, err)
-		}
-		return save, err
+		return save, utils.ErrChapterNotSupported
 	}
+	saveValue := reflect.ValueOf(save).Elem()
+	_, err = parseSaveLine(lines, 0, saveValue.Kind(), saveValue)
+	return save, err
 }
 
 func LoadSave(path string, chapter int) (save Save, err error) {
@@ -397,8 +386,4 @@ func getExampleSaveBytesForChapter(chapter int) ([]byte, error) {
 		return chapter5bytes, nil
 	}
 	return []byte{}, utils.ErrChapterNotSupported
-}
-
-func Edit(s *Save, props map[string]string) error {
-	return nil
 }

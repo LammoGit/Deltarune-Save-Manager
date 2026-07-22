@@ -214,7 +214,7 @@ func (sm *SaveManager) hardLinkIDFromSlotID(id SlotID) (string, bool) {
 
 // Create creates a new save file with given name and chapter
 // uses standard saves started directly from the given chapter
-func (sm *SaveManager) Create(name string, chapter int) error {
+func (sm *SaveManager) Create(name string, chapter int, sideB bool) error {
 	// If chapter is higher than maximum allowed, then return an error
 	if chapter > utils.MAXCHAPTER {
 		return utils.ErrChapterNotSupported
@@ -226,7 +226,7 @@ func (sm *SaveManager) Create(name string, chapter int) error {
 	}
 
 	// Create a new save file and return error if it exists
-	saveID := SaveID{Name: name, Chapter: chapter}
+	saveID := SaveID{Name: name, Chapter: chapter, SideB: sideB}
 	path := filepath.Join(sm.ManagerPath, saveID.String())
 	file, err := os.OpenFile(path, os.O_WRONLY|os.O_CREATE|os.O_EXCL, 0644)
 	if err != nil {
@@ -260,9 +260,9 @@ func (sm *SaveManager) Create(name string, chapter int) error {
 }
 
 // Swap swaps names of the two saves having given names
-func (sm *SaveManager) Swap(name1, name2 string, chapter int) error {
-	saveID1 := SaveID{Name: name1, Chapter: chapter}
-	saveID2 := SaveID{Name: name2, Chapter: chapter}
+func (sm *SaveManager) Swap(name1, name2 string, chapter int, sideB bool) error {
+	saveID1 := SaveID{Name: name1, Chapter: chapter, SideB: sideB}
+	saveID2 := SaveID{Name: name2, Chapter: chapter, SideB: sideB}
 
 	path1 := filepath.Join(sm.ManagerPath, saveID1.String())
 	path2 := filepath.Join(sm.ManagerPath, saveID2.String())
@@ -325,11 +325,11 @@ func (sm *SaveManager) Swap(name1, name2 string, chapter int) error {
 
 // SetSlot sets save by given name and chapter to slot for the given chapter and index
 // if eraseUnmanaged is true, then allows to delete unmanaged slots, i.e. losing them forever
-func (sm *SaveManager) SetSlot(name string, chapter, slot int, eraseUnmanaged bool) error {
-	saveID := SaveID{Name: name, Chapter: chapter}
+func (sm *SaveManager) SetSlot(name string, chapter, slot int, sideB bool, eraseUnmanaged bool) error {
+	saveID := SaveID{Name: name, Chapter: chapter, SideB: sideB}
 	savePath := filepath.Join(sm.ManagerPath, saveID.String())
 
-	slotID := SlotID{Chapter: chapter, Slot: slot}
+	slotID := SlotID{Chapter: chapter, Slot: slot, SideB: sideB}
 	slotPath := filepath.Join(sm.SlotsPath, slotID.String())
 
 	saveHardLink, ok := sm.hardLinkIDFromSaveID(saveID)
@@ -416,11 +416,11 @@ func (sm *SaveManager) UnsetSlot(chapter, slot int, eraseUnmanaged bool) error {
 }
 
 // SaveSlot creates and links a managed save file for the specified slot
-func (sm *SaveManager) SaveSlot(name string, chapter, slot int) error {
-	saveID := SaveID{Name: name, Chapter: chapter}
+func (sm *SaveManager) SaveSlot(name string, chapter, slot int, sideB bool) error {
+	saveID := SaveID{Name: name, Chapter: chapter, SideB: sideB}
 	savePath := filepath.Join(sm.ManagerPath, saveID.String())
 
-	slotID := SlotID{Chapter: chapter, Slot: slot}
+	slotID := SlotID{Chapter: chapter, Slot: slot, SideB: sideB}
 	slotPath := filepath.Join(sm.SlotsPath, slotID.String())
 
 	slotHardLink, ok := sm.hardLinkIDFromSlotID(slotID)
@@ -452,8 +452,8 @@ func (sm *SaveManager) SaveSlot(name string, chapter, slot int) error {
 
 // Remove removes the specified managed save
 // if removeSlots is specified, then removes all linked slots
-func (sm *SaveManager) Remove(name string, chapter int, removeSlots bool) error {
-	saveID := SaveID{Name: name, Chapter: chapter}
+func (sm *SaveManager) Remove(name string, chapter int, sideB, removeSlots bool) error {
+	saveID := SaveID{Name: name, Chapter: chapter, SideB: sideB}
 	savePath := filepath.Join(sm.ManagerPath, saveID.String())
 
 	saveHardLink, ok := sm.hardLinkIDFromSaveID(saveID)
@@ -496,9 +496,9 @@ func (sm *SaveManager) Remove(name string, chapter int, removeSlots bool) error 
 }
 
 // Rename renames a managed save
-func (sm *SaveManager) Rename(nameFrom, nameTo string, chapter int) error {
-	saveIDFrom := SaveID{Name: nameFrom, Chapter: chapter}
-	saveIDTo := SaveID{Name: nameTo, Chapter: chapter}
+func (sm *SaveManager) Rename(nameFrom, nameTo string, chapter int, sideB bool) error {
+	saveIDFrom := SaveID{Name: nameFrom, Chapter: chapter, SideB: sideB}
+	saveIDTo := SaveID{Name: nameTo, Chapter: chapter, SideB: sideB}
 
 	savePathFrom := filepath.Join(sm.ManagerPath, saveIDFrom.String())
 	savePathTo := filepath.Join(sm.ManagerPath, saveIDTo.String())
@@ -534,9 +534,9 @@ func (sm *SaveManager) Rename(nameFrom, nameTo string, chapter int) error {
 }
 
 // Copy create a copy of the save
-func (sm *SaveManager) Copy(nameFrom, nameTo string, chapter int) error {
-	saveIDFrom := SaveID{Name: nameFrom, Chapter: chapter}
-	saveIDTo := SaveID{Name: nameTo, Chapter: chapter}
+func (sm *SaveManager) Copy(nameFrom, nameTo string, chapter int, sideB bool) error {
+	saveIDFrom := SaveID{Name: nameFrom, Chapter: chapter, SideB: sideB}
+	saveIDTo := SaveID{Name: nameTo, Chapter: chapter, SideB: sideB}
 
 	savePathFrom := filepath.Join(sm.ManagerPath, saveIDFrom.String())
 	savePathTo := filepath.Join(sm.ManagerPath, saveIDTo.String())
@@ -591,11 +591,11 @@ func (sm *SaveManager) Copy(nameFrom, nameTo string, chapter int) error {
 }
 
 // Edit changes given in the map properties of the specified save
-func (sm *SaveManager) Edit(name string, chapter int, props map[string]string) error {
-	saveID := SaveID{Name: name, Chapter: chapter}
+func (sm *SaveManager) Edit(name string, chapter int, sideB bool, props map[string]string) error {
+	saveID := SaveID{Name: name, Chapter: chapter, SideB: sideB}
 	save, ok := sm.Saves[saveID]
 	if !ok {
 		return utils.ErrSaveNotExist
 	}
-	return Edit(&save, props)
+	return save.Edit(props)
 }

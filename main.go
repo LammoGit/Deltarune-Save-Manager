@@ -5,8 +5,9 @@ import (
 	"fmt"
 	"maps"
 	"os"
-	"path/filepath"
 	"slices"
+
+	"path/filepath"
 
 	"github.com/urfave/cli/v3"
 
@@ -38,12 +39,16 @@ func main() {
 				Usage:   "commands for managing save files",
 				Commands: []*cli.Command{
 					{
-						Name:    "create",
-						Aliases: []string{},
-						Usage:   "create new save file with standard properties",
+						Name:  "create",
+						Usage: "create new save file with standard properties",
+						Flags: []cli.Flag{
+							&cli.BoolFlag{
+								Name: "sideb",
+							},
+						},
 						Arguments: []cli.Argument{
 							&cli.StringArg{
-								Name: "save name",
+								Name: "save_name",
 							},
 							&cli.IntArg{
 								Name: "chapter",
@@ -51,25 +56,58 @@ func main() {
 						},
 						Action: func(ctx context.Context, cmd *cli.Command) error {
 							err := manager.Create(
-								cmd.StringArg("save name"),
+								cmd.StringArg("save_name"),
 								cmd.IntArg("chapter"),
+								cmd.Bool("sideb"),
 							)
 							return err
 						},
 					},
 					{
-						Name:    "remove",
-						Aliases: []string{},
-						Usage:   "remove a save file with or without connected slots",
+						Name:  "info",
+						Usage: "show save's contents",
+						Flags: []cli.Flag{
+							&cli.BoolFlag{
+								Name: "sideb",
+							},
+						},
+						Arguments: []cli.Argument{
+							&cli.StringArg{
+								Name: "save_name",
+							},
+							&cli.IntArg{
+								Name: "chapter",
+							},
+						},
+						Action: func(ctx context.Context, cmd *cli.Command) error {
+							saveID := saves.SaveID{
+								Name:    cmd.StringArg("save_name"),
+								Chapter: cmd.IntArg("chapter"),
+								SideB:   cmd.Bool("sideb"),
+							}
+							save, ok := manager.Saves[saveID]
+							if !ok {
+								return nil
+							}
+							fmt.Println(save)
+							return nil
+						},
+					},
+					{
+						Name:  "remove",
+						Usage: "remove a save file with or without connected slots",
 						Flags: []cli.Flag{
 							&cli.BoolFlag{
 								Name:    "remove-slots",
 								Aliases: []string{"slots", "cascade"},
 							},
+							&cli.BoolFlag{
+								Name: "sideb",
+							},
 						},
 						Arguments: []cli.Argument{
 							&cli.StringArg{
-								Name: "save name",
+								Name: "save_name",
 							},
 							&cli.IntArg{
 								Name: "chapter",
@@ -77,54 +115,28 @@ func main() {
 						},
 						Action: func(ctx context.Context, cmd *cli.Command) error {
 							err := manager.Remove(
-								cmd.StringArg("save name"),
+								cmd.StringArg("save_name"),
 								cmd.IntArg("chapter"),
+								cmd.Bool("sideb"),
 								cmd.Bool("remove-slots"),
 							)
 							return err
 						},
 					},
 					{
-						Name:    "set",
-						Aliases: []string{},
-						Usage:   "set a save file in given save slot",
+						Name:  "rename",
+						Usage: "rename a save file",
 						Flags: []cli.Flag{
 							&cli.BoolFlag{
-								Name:    "erase-unmanaged",
-								Aliases: []string{"unmanaged"},
+								Name: "sideb",
 							},
 						},
 						Arguments: []cli.Argument{
 							&cli.StringArg{
-								Name: "save name",
-							},
-							&cli.IntArg{
-								Name: "chapter",
-							},
-							&cli.IntArg{
-								Name: "slot",
-							},
-						},
-						Action: func(ctx context.Context, cmd *cli.Command) error {
-							err := manager.SetSlot(
-								cmd.StringArg("save name"),
-								cmd.IntArg("chapter"),
-								cmd.IntArg("slot"),
-								cmd.Bool("erase-unmanaged"),
-							)
-							return err
-						},
-					},
-					{
-						Name:    "rename",
-						Aliases: []string{},
-						Usage:   "rename a save file",
-						Arguments: []cli.Argument{
-							&cli.StringArg{
-								Name: "save name from",
+								Name: "save_name from",
 							},
 							&cli.StringArg{
-								Name: "save name to",
+								Name: "save_name to",
 							},
 							&cli.IntArg{
 								Name: "chapter",
@@ -132,23 +144,28 @@ func main() {
 						},
 						Action: func(ctx context.Context, cmd *cli.Command) error {
 							err := manager.Rename(
-								cmd.StringArg("save name from"),
-								cmd.StringArg("save name to"),
+								cmd.StringArg("save_name from"),
+								cmd.StringArg("save_name to"),
 								cmd.IntArg("chapter"),
+								cmd.Bool("sideb"),
 							)
 							return err
 						},
 					},
 					{
-						Name:    "swap",
-						Aliases: []string{},
-						Usage:   "swap names of two save files",
+						Name:  "swap",
+						Usage: "swap names of two save files",
+						Flags: []cli.Flag{
+							&cli.BoolFlag{
+								Name: "sideb",
+							},
+						},
 						Arguments: []cli.Argument{
 							&cli.StringArg{
-								Name: "first save name",
+								Name: "first save_name",
 							},
 							&cli.StringArg{
-								Name: "second save name",
+								Name: "second save_name",
 							},
 							&cli.IntArg{
 								Name: "chapter",
@@ -156,23 +173,28 @@ func main() {
 						},
 						Action: func(ctx context.Context, cmd *cli.Command) error {
 							err := manager.Swap(
-								cmd.StringArg("first save name"),
-								cmd.StringArg("second save name"),
+								cmd.StringArg("first save_name"),
+								cmd.StringArg("second save_name"),
 								cmd.IntArg("chapter"),
+								cmd.Bool("sideb"),
 							)
 							return err
 						},
 					},
 					{
-						Name:    "copy",
-						Aliases: []string{},
-						Usage:   "create a copy of a save file",
+						Name:  "copy",
+						Usage: "create a copy of a save file",
+						Flags: []cli.Flag{
+							&cli.BoolFlag{
+								Name: "sideb",
+							},
+						},
 						Arguments: []cli.Argument{
 							&cli.StringArg{
-								Name: "save name from",
+								Name: "save_name from",
 							},
 							&cli.StringArg{
-								Name: "save name to",
+								Name: "save_name to",
 							},
 							&cli.IntArg{
 								Name: "chapter",
@@ -180,17 +202,17 @@ func main() {
 						},
 						Action: func(ctx context.Context, cmd *cli.Command) error {
 							err := manager.Copy(
-								cmd.StringArg("save name from"),
-								cmd.StringArg("save name to"),
+								cmd.StringArg("save_name from"),
+								cmd.StringArg("save_name to"),
 								cmd.IntArg("chapter"),
+								cmd.Bool("sideb"),
 							)
 							return err
 						},
 					},
 					{
-						Name:    "edit",
-						Aliases: []string{},
-						Usage:   "change properties of a save file",
+						Name:  "edit",
+						Usage: "change properties of a save file",
 						Action: func(ctx context.Context, cmd *cli.Command) error {
 							return nil
 						},
@@ -203,12 +225,16 @@ func main() {
 				Usage:   "commands for managing save slots",
 				Commands: []*cli.Command{
 					{
-						Name:    "save",
-						Aliases: []string{},
-						Usage:   "create a save file of a slot",
+						Name:  "save",
+						Usage: "create a save file of a slot",
+						Flags: []cli.Flag{
+							&cli.BoolFlag{
+								Name: "sideb",
+							},
+						},
 						Arguments: []cli.Argument{
 							&cli.StringArg{
-								Name: "save name",
+								Name: "save_name",
 							},
 							&cli.IntArg{
 								Name: "chapter",
@@ -219,17 +245,81 @@ func main() {
 						},
 						Action: func(ctx context.Context, cmd *cli.Command) error {
 							err := manager.SaveSlot(
-								cmd.StringArg("save name"),
+								cmd.StringArg("save_name"),
 								cmd.IntArg("chapter"),
 								cmd.IntArg("slot"),
+								cmd.Bool("sideb"),
 							)
 							return err
 						},
 					},
 					{
-						Name:    "unset",
-						Aliases: []string{},
-						Usage:   "remove save slot, but keep save file",
+						Name:  "info",
+						Usage: "show slot's contents",
+						Flags: []cli.Flag{
+							&cli.BoolFlag{
+								Name: "sideb",
+							},
+						},
+						Arguments: []cli.Argument{
+							&cli.IntArg{
+								Name: "chapter",
+							},
+							&cli.IntArg{
+								Name: "slot",
+							},
+						},
+						Action: func(ctx context.Context, cmd *cli.Command) error {
+							slotID := saves.SlotID{
+								Chapter: cmd.IntArg("chapter"),
+								Slot:    cmd.IntArg("slot"),
+								SideB:   cmd.Bool("sideb"),
+							}
+							save, ok := manager.Slots[slotID]
+							if !ok {
+								return nil
+							}
+							fmt.Println(save)
+							return nil
+						},
+					},
+					{
+						Name:  "set",
+						Usage: "set a save file in given save slot",
+						Flags: []cli.Flag{
+							&cli.BoolFlag{
+								Name:    "erase-unmanaged",
+								Aliases: []string{"unmanaged"},
+							},
+							&cli.BoolFlag{
+								Name: "sideb",
+							},
+						},
+						Arguments: []cli.Argument{
+							&cli.StringArg{
+								Name: "save_name",
+							},
+							&cli.IntArg{
+								Name: "chapter",
+							},
+							&cli.IntArg{
+								Name: "slot",
+							},
+						},
+						Action: func(ctx context.Context, cmd *cli.Command) error {
+							err := manager.SetSlot(
+								cmd.StringArg("save_name"),
+								cmd.IntArg("chapter"),
+								cmd.IntArg("slot"),
+								cmd.Bool("sideb"),
+								cmd.Bool("erase-unmanaged"),
+							)
+							return err
+						},
+					},
+					{
+						Name:  "unset",
+						Usage: "remove save slot, but keep save file",
 						Flags: []cli.Flag{
 							&cli.BoolFlag{
 								Name:    "erase-unmanaged",
@@ -257,9 +347,8 @@ func main() {
 				},
 			},
 			{
-				Name:    "saves",
-				Aliases: []string{},
-				Usage:   "list all save files",
+				Name:  "saves",
+				Usage: "list all save files",
 				Action: func(ctx context.Context, cmd *cli.Command) error {
 					for id := range manager.Saves {
 						fmt.Printf("Chapter %d - %s\n", id.Chapter, id.Name)
@@ -268,9 +357,8 @@ func main() {
 				},
 			},
 			{
-				Name:    "slots",
-				Aliases: []string{},
-				Usage:   "list all save slots",
+				Name:  "slots",
+				Usage: "list all save slots",
 				Action: func(ctx context.Context, cmd *cli.Command) error {
 					keys := slices.Collect(maps.Keys(manager.Slots))
 					slices.SortFunc(
@@ -292,10 +380,10 @@ func main() {
 						var playerName string
 						var charName string
 						switch s := slot.(type) {
-						case saves.Save1:
+						case *saves.Save1:
 							playerName = s.PlayerName
 							charName = s.CharName
-						case saves.Save2:
+						case *saves.Save2:
 							playerName = s.PlayerName
 							charName = s.CharName
 						}

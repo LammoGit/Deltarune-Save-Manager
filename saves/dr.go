@@ -112,15 +112,9 @@ func (dr *DrINI) SetSlotFromSave(save Save, chapter int, index int, replace bool
 	}
 
 	switch s := save.(type) {
-	case Save1:
+	case *Save1:
 		f(s.PlayerName, s.Time, s.Room)
-	case Save2:
-		f(s.PlayerName, s.Time, s.Room)
-	case Save3:
-		f(s.PlayerName, s.Time, s.Room)
-	case Save4:
-		f(s.PlayerName, s.Time, s.Room)
-	case Save5:
+	case *Save2:
 		f(s.PlayerName, s.Time, s.Room)
 	default:
 		return false
