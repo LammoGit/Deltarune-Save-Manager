@@ -2,12 +2,13 @@
 package saves
 
 import (
-	"dsm/utils"
 	"fmt"
 	"os"
 	"path/filepath"
 	"slices"
 	"strconv"
+
+	"github.com/LammoGit/Deltarune-Save-Manager/utils"
 )
 
 // SaveID is a type for a unique Save identifier

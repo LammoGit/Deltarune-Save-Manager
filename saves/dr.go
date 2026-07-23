@@ -6,8 +6,8 @@ import (
 	"os"
 	"strconv"
 
-	"dsm/ini"
-	"dsm/utils"
+	"github.com/LammoGit/Deltarune-Save-Manager/ini"
+	"github.com/LammoGit/Deltarune-Save-Manager/utils"
 )
 
 // SlotDr type represents a save slot section in dr.ini

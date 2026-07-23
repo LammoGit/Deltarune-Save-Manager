@@ -1,8 +1,9 @@
 package saves
 
 import (
-	"dsm/utils"
 	_ "embed"
+
+	"github.com/LammoGit/Deltarune-Save-Manager/utils"
 )
 
 //go:embed 1_savefile

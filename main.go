@@ -11,8 +11,8 @@ import (
 
 	"github.com/urfave/cli/v3"
 
-	"dsm/saves"
-	"dsm/utils"
+	"github.com/LammoGit/Deltarune-Save-Manager/saves"
+	"github.com/LammoGit/Deltarune-Save-Manager/utils"
 )
 
 func main() {

@@ -1,4 +1,4 @@
-module dsm
+module github.com/LammoGit/Deltarune-Save-Manager
 
 go 1.26.2
 

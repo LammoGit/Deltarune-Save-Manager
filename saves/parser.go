@@ -3,7 +3,6 @@ package saves
 import (
 	"bufio"
 	"bytes"
-	"dsm/utils"
 	_ "embed"
 	"fmt"
 	"io"
@@ -11,6 +10,8 @@ import (
 	"reflect"
 	"strconv"
 	"strings"
+
+	"github.com/LammoGit/Deltarune-Save-Manager/utils"
 )
 
 func parseSaveLine(scanner *bufio.Scanner, lineNum int, kind reflect.Kind, v reflect.Value) (int, error) {
