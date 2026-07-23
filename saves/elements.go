@@ -5,14 +5,14 @@ type Element int
 
 const (
 	ElementEmpty       Element = 0
-	ElementElectroHoly         = 1
+	ElementElectroHoly Element = 1
 	ElementElectro
 	ElementHoly
-	ElementDarkStar = 5
+	ElementDarkStar Element = 5
 	ElementDark
 	ElementStar
-	ElementPuppetCat = 6
+	ElementPuppetCat Element = 6
 	ElementPuppet
 	ElementCat
-	ElementMouse = 7
+	ElementMouse Element = 7
 )

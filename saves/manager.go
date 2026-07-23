@@ -589,13 +589,3 @@ func (sm *SaveManager) Copy(nameFrom, nameTo string, chapter int, sideB bool) er
 
 	return nil
 }
-
-// Edit changes given in the map properties of the specified save
-func (sm *SaveManager) Edit(name string, chapter int, sideB bool, props map[string]string) error {
-	saveID := SaveID{Name: name, Chapter: chapter, SideB: sideB}
-	save, ok := sm.Saves[saveID]
-	if !ok {
-		return utils.ErrSaveNotExist
-	}
-	return save.Edit(props)
-}

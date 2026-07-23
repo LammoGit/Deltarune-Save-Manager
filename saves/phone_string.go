@@ -9,16 +9,27 @@ func _() {
 	// Re-run the stringer command to generate them again.
 	var x [1]struct{}
 	_ = x[PhoneEmpty-0]
+	_ = x[PhoneHome-201]
+	_ = x[PhoneSans-202]
 }
 
-const _Phone_name = "Empty"
+const (
+	_Phone_name_0 = "Empty"
+	_Phone_name_1 = "HomeSans"
+)
 
-var _Phone_index = [...]uint8{0, 5}
+var (
+	_Phone_index_1 = [...]uint8{0, 4, 8}
+)
 
 func (i Phone) String() string {
-	idx := int(i) - 0
-	if i < 0 || idx >= len(_Phone_index)-1 {
+	switch {
+	case i == 0:
+		return _Phone_name_0
+	case 201 <= i && i <= 202:
+		i -= 201
+		return _Phone_name_1[_Phone_index_1[i]:_Phone_index_1[i+1]]
+	default:
 		return "Phone(" + strconv.FormatInt(int64(i), 10) + ")"
 	}
-	return _Phone_name[_Phone_index[idx]:_Phone_index[idx+1]]
 }

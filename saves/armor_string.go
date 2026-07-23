@@ -36,16 +36,45 @@ func _() {
 	_ = x[ArmorGingerGuard-25]
 	_ = x[ArmorBlueRibbon-26]
 	_ = x[ArmorTennaTie-27]
+	_ = x[ArmorMonarchRBN-30]
+	_ = x[ArmorTrueTie-31]
+	_ = x[ArmorDogWindow-32]
+	_ = x[ArmorRedRibbon-33]
+	_ = x[ArmorNetskieHat-34]
+	_ = x[ArmorSethSpecs-35]
+	_ = x[ArmorYellowHat-36]
+	_ = x[ArmorOGlove-37]
+	_ = x[ArmorGreenApron-38]
+	_ = x[ArmorWaferguard-50]
+	_ = x[ArmorMysticBand-51]
+	_ = x[ArmorPowerBand-52]
+	_ = x[ArmorPrincessRBN-53]
+	_ = x[ArmorGoldWidow-54]
 }
 
-const _Armor_name = "EmptyAmberCardDiceBracePinkRibbonWhiteRibbonIronShackleMouseTokenJevilstailSilverCardTwinRibbonGlowWristChainMailBShotBowtieSpikeBandSilverWatchTensionBowMannequinDarkGoldBandSkyMantleSpikeShackleFrayedBowtieDealmakerRoyalPinShadowMantleLodeStoneGingerGuardBlueRibbonTennaTie"
+const (
+	_Armor_name_0 = "EmptyAmberCardDiceBracePinkRibbonWhiteRibbonIronShackleMouseTokenJevilstailSilverCardTwinRibbonGlowWristChainMailBShotBowtieSpikeBandSilverWatchTensionBowMannequinDarkGoldBandSkyMantleSpikeShackleFrayedBowtieDealmakerRoyalPinShadowMantleLodeStoneGingerGuardBlueRibbonTennaTie"
+	_Armor_name_1 = "MonarchRBNTrueTieDogWindowRedRibbonNetskieHatSethSpecsYellowHatOGloveGreenApron"
+	_Armor_name_2 = "WaferguardMysticBandPowerBandPrincessRBNGoldWidow"
+)
 
-var _Armor_index = [...]uint16{0, 5, 14, 23, 33, 44, 55, 65, 75, 85, 95, 104, 113, 124, 133, 144, 154, 163, 175, 184, 196, 208, 217, 225, 237, 246, 257, 267, 275}
+var (
+	_Armor_index_0 = [...]uint16{0, 5, 14, 23, 33, 44, 55, 65, 75, 85, 95, 104, 113, 124, 133, 144, 154, 163, 175, 184, 196, 208, 217, 225, 237, 246, 257, 267, 275}
+	_Armor_index_1 = [...]uint8{0, 10, 17, 26, 35, 45, 54, 63, 69, 79}
+	_Armor_index_2 = [...]uint8{0, 10, 20, 29, 40, 49}
+)
 
 func (i Armor) String() string {
-	idx := int(i) - 0
-	if i < 0 || idx >= len(_Armor_index)-1 {
+	switch {
+	case 0 <= i && i <= 27:
+		return _Armor_name_0[_Armor_index_0[i]:_Armor_index_0[i+1]]
+	case 30 <= i && i <= 38:
+		i -= 30
+		return _Armor_name_1[_Armor_index_1[i]:_Armor_index_1[i+1]]
+	case 50 <= i && i <= 54:
+		i -= 50
+		return _Armor_name_2[_Armor_index_2[i]:_Armor_index_2[i+1]]
+	default:
 		return "Armor(" + strconv.FormatInt(int64(i), 10) + ")"
 	}
-	return _Armor_name[_Armor_index[idx]:_Armor_index[idx+1]]
 }

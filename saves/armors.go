@@ -32,7 +32,10 @@ const (
 	ArmorGingerGuard
 	ArmorBlueRibbon
 	ArmorTennaTie
-	ArmorMonarchRBN = iota + 2
+)
+
+const (
+	ArmorMonarchRBN Armor = iota + 30
 	ArmorTrueTie
 	ArmorDogWindow
 	ArmorRedRibbon
@@ -41,7 +44,10 @@ const (
 	ArmorYellowHat
 	ArmorOGlove
 	ArmorGreenApron
-	ArmorWaferguard = iota + 13
+)
+
+const (
+	ArmorWaferguard Armor = iota + 50
 	ArmorMysticBand
 	ArmorPowerBand
 	ArmorPrincessRBN
@@ -58,7 +64,7 @@ type ArmorInfo struct {
 	Defence       int
 	Magic         int
 	BoltSpeed     int
-	Grazeamt      int
+	GrazeAmount   int
 	GrazeSize     int
 	KrisCanWear   bool
 	SusieCanWear  bool

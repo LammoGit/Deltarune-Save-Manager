@@ -31,7 +31,9 @@ const (
 	WeaponToxicAxe
 	WeaponFlexScarf
 	WeaponBlackShard
-	WeaponWoodBlade2 = iota + 3
+)
+const (
+	WeaponWoodBlade2 Weapon = iota + 30
 	WeaponThatchet
 	WeaponBlueShoes
 	WeaponAquaKnife
@@ -39,7 +41,10 @@ const (
 	WeaponBrokenScarf
 	WeaponGildedRose
 	WeaponMistleWP
-	WeaponJingleBlade = iota + 15
+)
+
+const (
+	WeaponJingleBlade Weapon = iota + 50
 	WeaponScarfMark
 	WeaponJusticeAxe
 	WeaponWinglade
@@ -56,7 +61,7 @@ type WeaponInfo struct {
 	Defence        int
 	Magic          int
 	Style          string
-	Grazeamt       int
+	GrazeAmount    int
 	GrazeSize      int
 	KrisCanWear    bool
 	SusieCanWear   bool

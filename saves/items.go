@@ -3,6 +3,8 @@ package saves
 //go:generate stringer -type=Item -trimprefix=Item
 type Item int
 
+const ItemEndOfInventory Item = 999
+
 const (
 	ItemEmpty Item = iota
 	ItemDarkerCandy
@@ -48,7 +50,10 @@ const (
 	ItemFlavigne
 	ItemGreenTea
 	ItemOrangeJuice
-	ItemAncientSweet = iota + 16
+)
+
+const (
+	ItemAncientSweet Item = iota + 60
 	ItemRhapsotea
 	ItemScarlixir
 	ItemBitterTear

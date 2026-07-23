@@ -8,6 +8,7 @@ func _() {
 	// An "invalid array index" compiler error signifies that the constant values have changed.
 	// Re-run the stringer command to generate them again.
 	var x [1]struct{}
+	_ = x[ItemEndOfInventory-999]
 	_ = x[ItemEmpty-0]
 	_ = x[ItemDarkerCandy-1]
 	_ = x[ItemReviveMint-2]
@@ -52,16 +53,40 @@ func _() {
 	_ = x[ItemFlavigne-41]
 	_ = x[ItemGreenTea-42]
 	_ = x[ItemOrangeJuice-43]
+	_ = x[ItemAncientSweet-60]
+	_ = x[ItemRhapsotea-61]
+	_ = x[ItemScarlixir-62]
+	_ = x[ItemBitterTear-63]
+	_ = x[ItemSchadenbrot-64]
+	_ = x[ItemTreeCake-65]
+	_ = x[ItemSPotion-66]
+	_ = x[ItemRawMoon-67]
+	_ = x[ItemPhanta-68]
+	_ = x[ItemFlowerSoda-69]
+	_ = x[ItemShikacola-70]
 }
 
-const _Item_name = "EmptyDarkerCandyReviveMintGlowshardManualBrokenCakeTopCakeSpinCakeDarkburgerLancerCookieGigaSaladClubswichHeartsDonutChocDiamondFavSandwichRouxlsRouxCDBagelMannequinRottenTeaRottenTea19RottenTea20RottenTea21DDBurgerLightCandyButJuiceSpagettiCodeJavaCookieTensionBitTensionGemTensionMaxReviveDustReviveBriteSPoisonDogDollarTVDinnerPipisFlatSodaTVSlopExecBuffetDeluxeDinnerPunchBowlFlavigneGreenTeaOrangeJuice"
+const (
+	_Item_name_0 = "EmptyDarkerCandyReviveMintGlowshardManualBrokenCakeTopCakeSpinCakeDarkburgerLancerCookieGigaSaladClubswichHeartsDonutChocDiamondFavSandwichRouxlsRouxCDBagelMannequinRottenTeaRottenTea19RottenTea20RottenTea21DDBurgerLightCandyButJuiceSpagettiCodeJavaCookieTensionBitTensionGemTensionMaxReviveDustReviveBriteSPoisonDogDollarTVDinnerPipisFlatSodaTVSlopExecBuffetDeluxeDinnerPunchBowlFlavigneGreenTeaOrangeJuice"
+	_Item_name_1 = "AncientSweetRhapsoteaScarlixirBitterTearSchadenbrotTreeCakeSPotionRawMoonPhantaFlowerSodaShikacola"
+	_Item_name_2 = "EndOfInventory"
+)
 
-var _Item_index = [...]uint16{0, 5, 16, 26, 35, 41, 51, 58, 66, 76, 88, 97, 106, 117, 128, 139, 149, 156, 165, 174, 185, 196, 207, 215, 225, 233, 245, 255, 265, 275, 285, 295, 306, 313, 322, 330, 335, 343, 349, 359, 371, 380, 388, 396, 407}
+var (
+	_Item_index_0 = [...]uint16{0, 5, 16, 26, 35, 41, 51, 58, 66, 76, 88, 97, 106, 117, 128, 139, 149, 156, 165, 174, 185, 196, 207, 215, 225, 233, 245, 255, 265, 275, 285, 295, 306, 313, 322, 330, 335, 343, 349, 359, 371, 380, 388, 396, 407}
+	_Item_index_1 = [...]uint8{0, 12, 21, 30, 40, 51, 59, 66, 73, 79, 89, 98}
+)
 
 func (i Item) String() string {
-	idx := int(i) - 0
-	if i < 0 || idx >= len(_Item_index)-1 {
+	switch {
+	case 0 <= i && i <= 43:
+		return _Item_name_0[_Item_index_0[i]:_Item_index_0[i+1]]
+	case 60 <= i && i <= 70:
+		i -= 60
+		return _Item_name_1[_Item_index_1[i]:_Item_index_1[i+1]]
+	case i == 999:
+		return _Item_name_2
+	default:
 		return "Item(" + strconv.FormatInt(int64(i), 10) + ")"
 	}
-	return _Item_name[_Item_index[idx]:_Item_index[idx+1]]
 }

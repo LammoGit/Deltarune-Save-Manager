@@ -9,16 +9,36 @@ func _() {
 	// Re-run the stringer command to generate them again.
 	var x [1]struct{}
 	_ = x[ElementEmpty-0]
+	_ = x[ElementElectroHoly-1]
+	_ = x[ElementElectro-1]
+	_ = x[ElementHoly-1]
+	_ = x[ElementDarkStar-5]
+	_ = x[ElementDark-5]
+	_ = x[ElementStar-5]
+	_ = x[ElementPuppetCat-6]
+	_ = x[ElementPuppet-6]
+	_ = x[ElementCat-6]
+	_ = x[ElementMouse-7]
 }
 
-const _Element_name = "Empty"
+const (
+	_Element_name_0 = "EmptyElectroHoly"
+	_Element_name_1 = "DarkStarPuppetCatMouse"
+)
 
-var _Element_index = [...]uint8{0, 5}
+var (
+	_Element_index_0 = [...]uint8{0, 5, 16}
+	_Element_index_1 = [...]uint8{0, 8, 17, 22}
+)
 
 func (i Element) String() string {
-	idx := int(i) - 0
-	if i < 0 || idx >= len(_Element_index)-1 {
+	switch {
+	case 0 <= i && i <= 1:
+		return _Element_name_0[_Element_index_0[i]:_Element_index_0[i+1]]
+	case 5 <= i && i <= 7:
+		i -= 5
+		return _Element_name_1[_Element_index_1[i]:_Element_index_1[i+1]]
+	default:
 		return "Element(" + strconv.FormatInt(int64(i), 10) + ")"
 	}
-	return _Element_name[_Element_index[idx]:_Element_index[idx+1]]
 }

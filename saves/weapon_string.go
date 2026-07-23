@@ -35,16 +35,44 @@ func _() {
 	_ = x[WeaponToxicAxe-24]
 	_ = x[WeaponFlexScarf-25]
 	_ = x[WeaponBlackShard-26]
+	_ = x[WeaponWoodBlade2-30]
+	_ = x[WeaponThatchet-31]
+	_ = x[WeaponBlueShoes-32]
+	_ = x[WeaponAquaKnife-33]
+	_ = x[WeaponFloweryScarf-34]
+	_ = x[WeaponBrokenScarf-35]
+	_ = x[WeaponGildedRose-36]
+	_ = x[WeaponMistleWP-37]
+	_ = x[WeaponJingleBlade-50]
+	_ = x[WeaponScarfMark-51]
+	_ = x[WeaponJusticeAxe-52]
+	_ = x[WeaponWinglade-53]
+	_ = x[WeaponAbsorbAx-54]
 }
 
-const _Weapon_name = "EmptyWoodBladeManeAxRedScarfEverybodyWeaponSpookyswordBraveAxDevilsknifeTrefoilRaggerDaintyScarfTwistedSwdSnowRingThornRingBounceBladeCheerScarfMechaSaberAutoAxeFiberScarfRagger2BrokenSwdPuppetScarfFreezeRingSaber10ToxicAxeFlexScarfBlackShard"
+const (
+	_Weapon_name_0 = "EmptyWoodBladeManeAxRedScarfEverybodyWeaponSpookyswordBraveAxDevilsknifeTrefoilRaggerDaintyScarfTwistedSwdSnowRingThornRingBounceBladeCheerScarfMechaSaberAutoAxeFiberScarfRagger2BrokenSwdPuppetScarfFreezeRingSaber10ToxicAxeFlexScarfBlackShard"
+	_Weapon_name_1 = "WoodBlade2ThatchetBlueShoesAquaKnifeFloweryScarfBrokenScarfGildedRoseMistleWP"
+	_Weapon_name_2 = "JingleBladeScarfMarkJusticeAxeWingladeAbsorbAx"
+)
 
-var _Weapon_index = [...]uint8{0, 5, 14, 20, 28, 43, 54, 61, 72, 79, 85, 96, 106, 114, 123, 134, 144, 154, 161, 171, 178, 187, 198, 208, 215, 223, 232, 242}
+var (
+	_Weapon_index_0 = [...]uint8{0, 5, 14, 20, 28, 43, 54, 61, 72, 79, 85, 96, 106, 114, 123, 134, 144, 154, 161, 171, 178, 187, 198, 208, 215, 223, 232, 242}
+	_Weapon_index_1 = [...]uint8{0, 10, 18, 27, 36, 48, 59, 69, 77}
+	_Weapon_index_2 = [...]uint8{0, 11, 20, 30, 38, 46}
+)
 
 func (i Weapon) String() string {
-	idx := int(i) - 0
-	if i < 0 || idx >= len(_Weapon_index)-1 {
+	switch {
+	case 0 <= i && i <= 26:
+		return _Weapon_name_0[_Weapon_index_0[i]:_Weapon_index_0[i+1]]
+	case 30 <= i && i <= 37:
+		i -= 30
+		return _Weapon_name_1[_Weapon_index_1[i]:_Weapon_index_1[i+1]]
+	case 50 <= i && i <= 54:
+		i -= 50
+		return _Weapon_name_2[_Weapon_index_2[i]:_Weapon_index_2[i+1]]
+	default:
 		return "Weapon(" + strconv.FormatInt(int64(i), 10) + ")"
 	}
-	return _Weapon_name[_Weapon_index[idx]:_Weapon_index[idx+1]]
 }
