@@ -22,9 +22,9 @@ type SaveID struct {
 // returns the name of a save file with the given SaveID
 func (id SaveID) String() string {
 	if id.SideB {
-		return fmt.Sprintf("%d_a_%s", id.Chapter, id.Name)
-	} else {
 		return fmt.Sprintf("%d_b_%s", id.Chapter, id.Name)
+	} else {
+		return fmt.Sprintf("%d_a_%s", id.Chapter, id.Name)
 	}
 }
 
