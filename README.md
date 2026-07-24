@@ -13,6 +13,12 @@ A cross-platform Command Line Interface (CLI) tool written in Go that lets you s
 
 ## Installation
 
+### Releases
+
+Download executable for your OS and architecture from the latest release.
+
+### Using Go
+
 Ensure you have [Go](https://go.dev) installed, then run:
 
 ```bash
