@@ -93,7 +93,7 @@ func TempFilePath(dirPath string) (string, error) {
 
 // Relink removes file if it exists and
 // creates a link at its place to the given path
-func Relink(filePath, linkPath string) error {
-	_ = os.Remove(filePath)
-	return os.Link(linkPath, filePath)
+func Relink(toPath, fromPath string) error {
+	_ = os.Remove(toPath)
+	return os.Link(fromPath, toPath)
 }
