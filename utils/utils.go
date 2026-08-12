@@ -30,7 +30,7 @@ var (
 
 // variables storing compiled regex patterns
 var (
-	SlotSectionLabelRegex = regexp.MustCompile(`G(?:[2-7]_)?\d+`)
+	SlotSectionLabelRegex = regexp.MustCompile(`G(?:[234567]_)?[0123459]`)
 	SlotRegex             = regexp.MustCompile(`filech(0|[^0\D]\d*)_(0|[^0\D]\d*)(_b)?`)
 	SaveRegex             = regexp.MustCompile(`(0|[^0\D]\d*)_(a|b)_(.+)`)
 )

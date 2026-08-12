@@ -13,7 +13,7 @@ import (
 // Test DeleteEqual utility function
 func TestDeleteEqual(t *testing.T) {
 	n := 100
-	s := make([]uint, n)
+	s := make([]uint, 0)
 	for range n {
 		s = append(s, rand.UintN(10))
 	}
