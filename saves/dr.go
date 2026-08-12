@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"os"
 	"strconv"
+	"strings"
 
 	"github.com/LammoGit/Deltarune-Save-Manager/ini"
 	"github.com/LammoGit/Deltarune-Save-Manager/utils"
@@ -40,14 +41,13 @@ func NewDrINI(path string) (dr DrINI, err error) {
 		return
 	}
 	dr = DrINI{ini, path}
-	dr.Clean()
 	return
 }
 
 // Clean removes all empty saves
 func (dr *DrINI) Clean() {
 	for label, section := range dr.INI {
-		if name, ok := section["Name"]; ok && name == "[EMPTY]" {
+		if name, ok := section["Name"]; ok && strings.Contains(name, "[EMPTY]") {
 			delete(dr.INI, label)
 		}
 	}
@@ -65,13 +65,14 @@ func (dr *DrINI) GetSlot(chapter, index int) (slot *SlotDr, ok bool) {
 }
 
 // GetSlots returns all save slot sections from the dr.ini file
-func (dr *DrINI) GetSlots() (slots []*SlotDr) {
+func (dr *DrINI) GetSlots() map[string]*SlotDr {
+	slots := make(map[string]*SlotDr)
 	for label, slot := range dr.INI {
 		if utils.SlotSectionLabelRegex.MatchString(label) {
-			slots = append(slots, (*SlotDr)(&slot))
+			slots[label] = (*SlotDr)(&slot)
 		}
 	}
-	return
+	return slots
 }
 
 // SetSlot sets a save slot with given slot and index
