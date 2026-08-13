@@ -1,2 +1,4 @@
 slots/
 bin/
+*.exe
+*profile
