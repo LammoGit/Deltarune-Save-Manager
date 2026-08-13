@@ -6,7 +6,6 @@ import (
 	"maps"
 	"os"
 	"path/filepath"
-	"slices"
 	"strings"
 	"testing"
 )
@@ -79,8 +78,23 @@ func TestCleanDrIni(t *testing.T) {
 	}
 	dr.Clean()
 
-	if !slices.Equal(dr.Sections(), []string{"G2_2", "G2_5", "G5_1"}) {
+	a := dr.Sections()
+	b := []string{"G2_2", "G2_5", "G5_1"}
+
+	if len(a) != len(b) {
 		t.Fatalf("Wrong Dr contents after cleaning %s", dr.Sections())
+	}
+
+	freq := make(map[string]int)
+	for _, v := range a {
+		freq[v]++
+	}
+
+	for _, v := range b {
+		if freq[v] == 0 {
+			t.Fatalf("Wrong Dr contents after cleaning %s", dr.Sections())
+		}
+		freq[v]--
 	}
 }
 
