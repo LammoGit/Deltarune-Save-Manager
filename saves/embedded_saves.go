@@ -21,6 +21,7 @@ var chapter4bytes []byte
 //go:embed 5_savefile
 var chapter5bytes []byte
 
+// getExampleSaveBytesForChapter returns bytes of example save bytes by chapter
 func getExampleSaveBytesForChapter(chapter int) ([]byte, error) {
 	switch chapter {
 	case 1:
