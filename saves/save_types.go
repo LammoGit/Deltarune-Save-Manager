@@ -6,7 +6,8 @@ import (
 	"time"
 )
 
-type ItemStats struct {
+// ItemStats1 represents stats of a dark world item in chapter 1
+type ItemStats1 struct {
 	Attack      int
 	Defence     int
 	Magic       int
@@ -17,7 +18,165 @@ type ItemStats struct {
 	Special     int
 }
 
-func (st ItemStats) String() string {
+// ItemStats2 represents stats of a dark world item in chapter 2 and further
+type ItemStats2 struct {
+	Attack        int
+	Defence       int
+	Magic         int
+	Bolts         int
+	GrazeAmount   int
+	GrazeSize     int
+	BoltSpeed     int
+	Special       int
+	Element       Element
+	ElementAmount float64
+}
+
+// CharacterStats1 represents stats of a character in a dark world in chapter 1
+type CharacterStats1 struct {
+	HP          int
+	MaxHP       int
+	Attack      int
+	Defence     int
+	Magic       int
+	Guts        int
+	Weapon      Weapon
+	Armor       [2]Armor
+	WeaponStyle string
+	ItemsStats  [4]ItemStats1
+	Spells      [12]Spell
+}
+
+// CharacterStats2 represents stats of a character in a dark world in chapter 2 and further
+type CharacterStats2 struct {
+	HP          int
+	MaxHP       int
+	Attack      int
+	Defence     int
+	Magic       int
+	Guts        int
+	Weapon      Weapon
+	Armor       [2]Armor
+	WeaponStyle string
+	ItemsStats  [4]ItemStats2
+	Spells      [12]Spell
+}
+
+// Inventory1 represents inventory contents in a dark world in chapter 1
+type Inventory1 [13]struct {
+	Item    Item
+	KeyItem KeyItem
+	Weapon  Weapon
+	Armor   Armor
+}
+
+// Inventory2 represents inventory contents in a dark world in chapter 2 and further
+type Inventory2 struct {
+	ItemsAndKeyItems [13]struct {
+		Item    Item
+		KeyItem KeyItem
+	}
+	WeaponsAndArmors [48]struct {
+		Weapon Weapon
+		Armor  Armor
+	}
+	PocketItems [72]Item // Items in the storage
+}
+
+// LightInventory represents inventory contents in the light world
+type LightInventory [8]struct {
+	Item  LItem
+	Phone Phone
+}
+
+// LightWorldStats represents stats of Kris is the light world
+type LightWorldStats struct {
+	Weapon         LItem
+	Armor          LItem
+	XP             int
+	Level          int
+	Gold           int
+	HP             int
+	MaxHP          int
+	Attack         int
+	Defence        int
+	WeaponStrength int
+	ArmorDefence   int
+	Inventory      LightInventory
+}
+
+// GlobalFlags represents used game flags
+type GlobalFlags [2500]string
+
+// Save1 represents chapter 1 save file format
+type Save1 struct {
+	PlayerName       string
+	CharName         string
+	OtherNames       [5]string
+	Characters       [3]Character
+	Gold             int
+	XP               int
+	Level            int
+	Inv              int
+	Invc             int
+	Darkzone         bool
+	CharactersStats  [4]CharacterStats1
+	BoltSpeed        int
+	GrazeAmount      int
+	GrazeSize        int
+	Inventory        Inventory1
+	Tension          int
+	MaxTension       int
+	LightWorldStats  LightWorldStats
+	GlobalFlags      GlobalFlags
+	ExtraGlobalFlags [7499]string
+	Plot             float64
+	Room             float64
+	Time             float64
+}
+
+// Save2 represents chapter 2 and further save file format
+type Save2 struct {
+	PlayerName      string
+	CharName        string
+	OtherNames      [5]string
+	Characters      [3]Character
+	Gold            int
+	XP              int
+	Level           int
+	Inv             int
+	Invc            int
+	Darkzone        bool
+	CharactersStats [5]CharacterStats2
+	BoltSpeed       int
+	GrazeAmount     int
+	GrazeSize       int
+	Inventory       Inventory2
+	Tension         int
+	MaxTension      int
+	LightWorldStats LightWorldStats
+	GlobalFlags     GlobalFlags
+	Plot            float64
+	Room            float64
+	Time            float64
+}
+
+// Save3 has the same structure as chapter 2 save file
+type Save3 Save2
+
+// Save4 has the same structure as chapter 2 save file
+type Save4 Save2
+
+// Save5 has the same structure as chapter 2 save file
+type Save5 Save2
+
+// Save must implement the String() method
+type Save interface {
+	String() string
+}
+
+// String returns a string representation of ItemStats1 structure
+func (st ItemStats1) String() string {
 	var b strings.Builder
 	bp := &b
 
@@ -33,21 +192,26 @@ func (st ItemStats) String() string {
 	return b.String()
 }
 
-type CharacterStats struct {
-	HP          int
-	MaxHP       int
-	Attack      int
-	Defence     int
-	Magic       int
-	Guts        int
-	Weapon      Weapon
-	Armor       [2]Armor
-	WeaponStyle string
-	ItemsStats  [4]ItemStats
-	Spells      [12]Spell
+// String returns a string representation of ItemStats1 structure
+func (st ItemStats2) String() string {
+	var b strings.Builder
+	bp := &b
+
+	fmt.Fprintf(bp, "Attack: %d\n", st.Attack)
+	fmt.Fprintf(bp, "Defence: %d\n", st.Defence)
+	fmt.Fprintf(bp, "Magic: %d\n", st.Magic)
+	fmt.Fprintf(bp, "Bolts: %d\n", st.Bolts)
+	fmt.Fprintf(bp, "GrazeAmount: %d\n", st.GrazeAmount)
+	fmt.Fprintf(bp, "GrazeSize: %d\n", st.GrazeSize)
+	fmt.Fprintf(bp, "BoltSpeed: %d\n", st.BoltSpeed)
+	fmt.Fprintf(bp, "Special: %d\n", st.Special)
+	fmt.Fprintf(bp, "Element: %f %s\n", st.ElementAmount, st.Element)
+
+	return b.String()
 }
 
-func (st CharacterStats) String() string {
+// String returns a string representation of ItemStats1 structure
+func (st CharacterStats1) String() string {
 	var b strings.Builder
 	bp := &b
 
@@ -73,155 +237,13 @@ func (st CharacterStats) String() string {
 		if spell == SpellEmpty {
 			continue
 		}
-		fmt.Fprintf(bp, "%d. %s\n", i, spell)
+		fmt.Fprintf(bp, "%d. %s\n", i+1, spell)
 	}
 
 	return b.String()
 }
 
-type LightWorldStats struct {
-	Weapon         LItem
-	Armor          LItem
-	XP             int
-	Level          int
-	Gold           int
-	HP             int
-	MaxHP          int
-	Attack         int
-	Defence        int
-	WeaponStrength int
-	ArmorDefence   int
-	Inventory      [8]struct {
-		Item  LItem
-		Phone Phone
-	}
-}
-
-func (st LightWorldStats) String() string {
-	var b strings.Builder
-	bp := &b
-
-	fmt.Fprintf(bp, "Weapon: %s\n", st.Weapon)
-	fmt.Fprintf(bp, "Armor: %s\n", st.Armor)
-	fmt.Fprintf(bp, "Exp: %d\n", st.XP)
-	fmt.Fprintf(bp, "Level: %d\n", st.Level)
-	fmt.Fprintf(bp, "Gold: %d\n", st.Gold)
-	fmt.Fprintf(bp, "HP: %d\n", st.HP)
-	fmt.Fprintf(bp, "Max HP: %d\n", st.MaxHP)
-	fmt.Fprintf(bp, "Attack: %d\n", st.Attack)
-	fmt.Fprintf(bp, "Defence: %d\n", st.Defence)
-	fmt.Fprintf(bp, "Weapon Strength: %d\n", st.WeaponStrength)
-	fmt.Fprintf(bp, "Armor Defence: %d\n", st.ArmorDefence)
-
-	fmt.Fprintln(bp, "Items:")
-	for i, slot := range st.Inventory {
-		if slot.Item == LItemEmpty {
-			continue
-		}
-		fmt.Fprintf(bp, "%d. %s\n", i+1, slot.Item)
-	}
-
-	fmt.Fprintln(bp, "Phone Numbers:")
-	for i, slot := range st.Inventory {
-		if slot.Phone == 0 {
-			continue
-		}
-		fmt.Fprintf(bp, "%d. %s\n", i+1, slot.Phone)
-	}
-
-	return b.String()
-}
-
-type GlobalFlags struct {
-	Flags [2500]string
-}
-
-func (gf GlobalFlags) String() string {
-	var b strings.Builder
-	bp := &b
-
-	// SideB progression flag
-	fmt.Fprintf(bp, "SideB Active: %t\n", gf.Flags[916] == "0")
-	fmt.Fprintf(bp, "SideB Progression: %s\n", gf.Flags[915])
-
-	return b.String()
-}
-
-type Save1 struct {
-	PlayerName      string
-	CharName        string
-	OtherNames      [5]string
-	Characters      [3]Character
-	Gold            int
-	XP              int
-	Level           int
-	Inv             int
-	Invc            int
-	Darkzone        bool
-	CharactersStats [4]CharacterStats
-	BoltSpeed       int
-	GrazeAmount     int
-	GrazeSize       int
-	Inventory       [13]struct {
-		Item    Item
-		KeyItem KeyItem
-		Weapon  Weapon
-		Armor   Armor
-	}
-	Tension          int
-	MaxTension       int
-	LightWorldStats  LightWorldStats
-	GlobalFlags      GlobalFlags
-	ExtraGlobalFlags [7499]string
-	Plot             float64
-	Room             float64
-	Time             float64
-}
-
-type ItemStats2 struct {
-	Attack        int
-	Defence       int
-	Magic         int
-	Bolts         int
-	GrazeAmount   int
-	GrazeSize     int
-	BoltSpeed     int
-	Special       int
-	Element       Element
-	ElementAmount float64
-}
-
-func (st ItemStats2) String() string {
-	var b strings.Builder
-	bp := &b
-
-	fmt.Fprintf(bp, "Attack: %d\n", st.Attack)
-	fmt.Fprintf(bp, "Defence: %d\n", st.Defence)
-	fmt.Fprintf(bp, "Magic: %d\n", st.Magic)
-	fmt.Fprintf(bp, "Bolts: %d\n", st.Bolts)
-	fmt.Fprintf(bp, "GrazeAmount: %d\n", st.GrazeAmount)
-	fmt.Fprintf(bp, "GrazeSize: %d\n", st.GrazeSize)
-	fmt.Fprintf(bp, "BoltSpeed: %d\n", st.BoltSpeed)
-	fmt.Fprintf(bp, "Special: %d\n", st.Special)
-	fmt.Fprintf(bp, "Element: %f %s\n", st.ElementAmount, st.Element)
-
-	return b.String()
-}
-
-type CharacterStats2 struct {
-	HP          int
-	MaxHP       int
-	Attack      int
-	Defence     int
-	Magic       int
-	Guts        int
-	Weapon      Weapon
-	Armor       [2]Armor
-	WeaponStyle string
-	ItemsStats  [4]ItemStats2
-	Spells      [12]Spell
-}
-
+// String returns a string representation of ItemStats1 structure
 func (st CharacterStats2) String() string {
 	var b strings.Builder
 	bp := &b
@@ -260,59 +282,167 @@ func (st CharacterStats2) String() string {
 		if spell == SpellEmpty {
 			continue
 		}
-		fmt.Fprintf(bp, "%d. %s\n", i, spell)
+		fmt.Fprintf(bp, "%d. %s\n", i+1, spell)
 	}
 
 	return b.String()
 }
 
-type Inventory2 struct {
-	ItemsAndKeyItems [13]struct {
-		Item    Item
-		KeyItem KeyItem
+// String returns a string representation of ItemStats1 structure
+func (in Inventory1) String() string {
+	var b strings.Builder
+	bp := &b
+
+	fmt.Fprintln(bp, "Items:")
+	for i, slot := range in {
+		if slot.Item == ItemEmpty {
+			continue
+		}
+		if slot.Item == ItemEndOfInventory {
+			break
+		}
+		fmt.Fprintf(bp, "%d. %s\n", i+1, slot.Item)
 	}
-	WeaponsAndArmors [48]struct {
-		Weapon Weapon
-		Armor  Armor
+
+	fmt.Fprintln(bp, "Key Items:")
+	for i, slot := range in {
+		if slot.KeyItem == KeyItemEmpty {
+			continue
+		}
+		fmt.Fprintf(bp, "%d. %s\n", i+1, slot.KeyItem)
 	}
-	PocketItems [72]Item // Items in the storage
+
+	fmt.Fprintln(bp, "Weapons:")
+	for i, slot := range in {
+		if slot.Weapon == WeaponEmpty {
+			continue
+		}
+		fmt.Fprintf(bp, "%d. %s\n", i+1, slot.Weapon)
+	}
+
+	fmt.Fprintln(bp, "Armors:")
+	for i, slot := range in {
+		if slot.Armor == ArmorEmpty {
+			continue
+		}
+		fmt.Fprintf(bp, "%d. %s\n", i+1, slot.Armor)
+	}
+
+	return b.String()
 }
 
-type Save2 struct {
-	PlayerName      string
-	CharName        string
-	OtherNames      [5]string
-	Characters      [3]Character
-	Gold            int
-	XP              int
-	Level           int
-	Inv             int
-	Invc            int
-	Darkzone        bool
-	CharactersStats [5]CharacterStats2
-	BoltSpeed       int
-	GrazeAmount     int
-	GrazeSize       int
-	Inventory       Inventory2
-	Tension         int
-	MaxTension      int
-	LightWorldStats LightWorldStats
-	GlobalFlags     GlobalFlags
-	Plot            float64
-	Room            float64
-	Time            float64
+// String returns a string representation of ItemStats1 structure
+func (in Inventory2) String() string {
+	var b strings.Builder
+	bp := &b
+
+	fmt.Fprintln(bp, "Items:")
+	for i, slot := range in.ItemsAndKeyItems {
+		if slot.Item == ItemEmpty {
+			continue
+		}
+		if slot.Item == ItemEndOfInventory {
+			break
+		}
+		fmt.Fprintf(bp, "%d. %s\n", i+1, slot.Item)
+	}
+
+	fmt.Fprintln(bp, "Key Items:")
+	for i, slot := range in.ItemsAndKeyItems {
+		if slot.KeyItem == KeyItemEmpty {
+			continue
+		}
+		fmt.Fprintf(bp, "%d. %s\n", i+1, slot.KeyItem)
+	}
+
+	fmt.Fprintln(bp, "Weapons:")
+	for i, slot := range in.WeaponsAndArmors {
+		if slot.Weapon == WeaponEmpty {
+			continue
+		}
+		fmt.Fprintf(bp, "%d. %s\n", i+1, slot.Weapon)
+	}
+
+	fmt.Fprintln(bp, "Armors:")
+	for i, slot := range in.WeaponsAndArmors {
+		if slot.Armor == ArmorEmpty {
+			continue
+		}
+		fmt.Fprintf(bp, "%d. %s\n", i+1, slot.Armor)
+	}
+
+	fmt.Fprintln(bp, "Storage Items:")
+	for i, item := range in.PocketItems {
+		if item == ItemEmpty {
+			continue
+		}
+		if item == ItemEndOfInventory {
+			break
+		}
+		fmt.Fprintf(bp, "%d. %s\n", i+1, item)
+	}
+
+	return b.String()
 }
 
-type Save3 Save2
+// String returns a string representation of ItemStats1 structure
+func (linv LightInventory) String() string {
+	var b strings.Builder
+	bp := &b
 
-type Save4 Save2
+	fmt.Fprintln(bp, "Items:")
+	for i, slot := range linv {
+		if slot.Item == LItemEmpty {
+			continue
+		}
+		fmt.Fprintf(bp, "%d. %s\n", i+1, slot.Item)
+	}
 
-type Save5 Save2
+	fmt.Fprintln(bp, "Phone Numbers:")
+	for i, slot := range linv {
+		if slot.Phone == PhoneEmpty {
+			continue
+		}
+		fmt.Fprintf(bp, "%d. %s\n", i+1, slot.Phone)
+	}
 
-type Save interface {
-	String() string
+	return b.String()
 }
 
+// String returns a string representation of ItemStats1 structure
+func (st LightWorldStats) String() string {
+	var b strings.Builder
+	bp := &b
+
+	fmt.Fprintf(bp, "Weapon: %s\n", st.Weapon)
+	fmt.Fprintf(bp, "Armor: %s\n", st.Armor)
+	fmt.Fprintf(bp, "Exp: %d\n", st.XP)
+	fmt.Fprintf(bp, "Level: %d\n", st.Level)
+	fmt.Fprintf(bp, "Gold: %d\n", st.Gold)
+	fmt.Fprintf(bp, "HP: %d\n", st.HP)
+	fmt.Fprintf(bp, "Max HP: %d\n", st.MaxHP)
+	fmt.Fprintf(bp, "Attack: %d\n", st.Attack)
+	fmt.Fprintf(bp, "Defence: %d\n", st.Defence)
+	fmt.Fprintf(bp, "Weapon Strength: %d\n", st.WeaponStrength)
+	fmt.Fprintf(bp, "Armor Defence: %d\n", st.ArmorDefence)
+	fmt.Fprint(bp, st.Inventory.String())
+
+	return b.String()
+}
+
+// String returns a string representation of ItemStats1 structure
+func (gf GlobalFlags) String() string {
+	var b strings.Builder
+	bp := &b
+
+	// SideB progression flag
+	fmt.Fprintf(bp, "SideB Active: %t\n", gf[916] == "0")
+	fmt.Fprintf(bp, "SideB Progression: %s\n", gf[915])
+
+	return b.String()
+}
+
+// String returns a string representation of ItemStats1 structure
 func (s *Save1) String() string {
 	var b strings.Builder
 	bp := &b
@@ -347,40 +477,7 @@ func (s *Save1) String() string {
 	fmt.Fprintf(bp, "Graze Amount: %d\n", s.GrazeAmount)
 	fmt.Fprintf(bp, "Graze Size: %d\n", s.GrazeSize)
 
-	fmt.Fprintln(bp, "Items:")
-	for i, slot := range s.Inventory {
-		if slot.Item == ItemEmpty {
-			continue
-		}
-		if slot.Item == ItemEndOfInventory {
-			break
-		}
-		fmt.Fprintf(bp, "%d. %s\n", i+1, slot.Item)
-	}
-
-	fmt.Fprintln(bp, "Key Items:")
-	for i, slot := range s.Inventory {
-		if slot.KeyItem == KeyItemEmpty {
-			continue
-		}
-		fmt.Fprintf(bp, "%d. %s\n", i+1, slot.KeyItem)
-	}
-
-	fmt.Fprintln(bp, "Weapons:")
-	for i, slot := range s.Inventory {
-		if slot.Weapon == WeaponEmpty {
-			continue
-		}
-		fmt.Fprintf(bp, "%d. %s\n", i+1, slot.Weapon)
-	}
-
-	fmt.Fprintln(bp, "Armors:")
-	for i, slot := range s.Inventory {
-		if slot.Armor == ArmorEmpty {
-			continue
-		}
-		fmt.Fprintf(bp, "%d. %s\n", i+1, slot.Armor)
-	}
+	fmt.Fprint(bp, s.Inventory.String())
 
 	fmt.Fprintf(bp, "Tension: %d\n", s.Tension)
 	fmt.Fprintf(bp, "Max Tension: %d\n", s.MaxTension)
@@ -397,6 +494,7 @@ func (s *Save1) String() string {
 	return b.String()
 }
 
+// String returns a string representation of ItemStats1 structure
 func (s *Save2) String() string {
 	var b strings.Builder
 	bp := &b
@@ -431,51 +529,7 @@ func (s *Save2) String() string {
 	fmt.Fprintf(bp, "Graze Amount: %d\n", s.GrazeAmount)
 	fmt.Fprintf(bp, "Graze Size: %d\n", s.GrazeSize)
 
-	fmt.Fprintln(bp, "Items:")
-	for i, slot := range s.Inventory.ItemsAndKeyItems {
-		if slot.Item == ItemEmpty {
-			continue
-		}
-		if slot.Item == ItemEndOfInventory {
-			break
-		}
-		fmt.Fprintf(bp, "%d. %s\n", i+1, slot.Item)
-	}
-
-	fmt.Fprintln(bp, "Key Items:")
-	for i, slot := range s.Inventory.ItemsAndKeyItems {
-		if slot.KeyItem == KeyItemEmpty {
-			continue
-		}
-		fmt.Fprintf(bp, "%d. %s\n", i+1, slot.KeyItem)
-	}
-
-	fmt.Fprintln(bp, "Weapons:")
-	for i, slot := range s.Inventory.WeaponsAndArmors {
-		if slot.Weapon == WeaponEmpty {
-			continue
-		}
-		fmt.Fprintf(bp, "%d. %s\n", i+1, slot.Weapon)
-	}
-
-	fmt.Fprintln(bp, "Armors:")
-	for i, slot := range s.Inventory.WeaponsAndArmors {
-		if slot.Armor == ArmorEmpty {
-			continue
-		}
-		fmt.Fprintf(bp, "%d. %s\n", i+1, slot.Armor)
-	}
-
-	fmt.Fprintln(bp, "Storage Items:")
-	for i, item := range s.Inventory.PocketItems {
-		if item == ItemEmpty {
-			continue
-		}
-		if item == ItemEndOfInventory {
-			break
-		}
-		fmt.Fprintf(bp, "%d. %s\n", i+1, item)
-	}
+	fmt.Fprint(bp, s.Inventory.String())
 
 	fmt.Fprintf(bp, "Tension: %d\n", s.Tension)
 	fmt.Fprintf(bp, "Max Tension: %d\n", s.MaxTension)
