@@ -11,6 +11,7 @@ import (
 
 	"github.com/urfave/cli/v3"
 
+	"github.com/LammoGit/Deltarune-Save-Manager/manager"
 	"github.com/LammoGit/Deltarune-Save-Manager/saves"
 	"github.com/LammoGit/Deltarune-Save-Manager/utils"
 )
@@ -24,7 +25,7 @@ func main() {
 	}
 
 	// Create a save manager object
-	manager, err := saves.NewSaveManager(filepath.Join(dirPath, "save-manager"), dirPath)
+	m, err := manager.NewSaveManager(filepath.Join(dirPath, "save-manager"), dirPath)
 	if err != nil {
 		fmt.Println(err)
 		return
@@ -55,7 +56,7 @@ func main() {
 							},
 						},
 						Action: func(ctx context.Context, cmd *cli.Command) error {
-							err := manager.Create(
+							err := m.Create(
 								cmd.StringArg("save_name"),
 								cmd.IntArg("chapter"),
 								cmd.Bool("sideb"),
@@ -80,12 +81,12 @@ func main() {
 							},
 						},
 						Action: func(ctx context.Context, cmd *cli.Command) error {
-							saveID := saves.SaveID{
+							saveID := manager.SaveID{
 								Name:    cmd.StringArg("save_name"),
 								Chapter: cmd.IntArg("chapter"),
 								SideB:   cmd.Bool("sideb"),
 							}
-							save, ok := manager.Saves[saveID]
+							save, ok := m.Saves[saveID]
 							if !ok {
 								return nil
 							}
@@ -114,7 +115,7 @@ func main() {
 							},
 						},
 						Action: func(ctx context.Context, cmd *cli.Command) error {
-							err := manager.Remove(
+							err := m.Remove(
 								cmd.StringArg("save_name"),
 								cmd.IntArg("chapter"),
 								cmd.Bool("sideb"),
@@ -143,7 +144,7 @@ func main() {
 							},
 						},
 						Action: func(ctx context.Context, cmd *cli.Command) error {
-							err := manager.Rename(
+							err := m.Rename(
 								cmd.StringArg("save_name from"),
 								cmd.StringArg("save_name to"),
 								cmd.IntArg("chapter"),
@@ -172,7 +173,7 @@ func main() {
 							},
 						},
 						Action: func(ctx context.Context, cmd *cli.Command) error {
-							err := manager.Swap(
+							err := m.Swap(
 								cmd.StringArg("first save_name"),
 								cmd.StringArg("second save_name"),
 								cmd.IntArg("chapter"),
@@ -201,7 +202,7 @@ func main() {
 							},
 						},
 						Action: func(ctx context.Context, cmd *cli.Command) error {
-							err := manager.Copy(
+							err := m.Copy(
 								cmd.StringArg("save_name from"),
 								cmd.StringArg("save_name to"),
 								cmd.IntArg("chapter"),
@@ -243,7 +244,7 @@ func main() {
 							},
 						},
 						Action: func(ctx context.Context, cmd *cli.Command) error {
-							err := manager.SaveSlot(
+							err := m.SaveSlot(
 								cmd.StringArg("save_name"),
 								cmd.IntArg("chapter"),
 								cmd.IntArg("slot"),
@@ -269,12 +270,12 @@ func main() {
 							},
 						},
 						Action: func(ctx context.Context, cmd *cli.Command) error {
-							slotID := saves.SlotID{
+							slotID := manager.SlotID{
 								Chapter: cmd.IntArg("chapter"),
 								Slot:    cmd.IntArg("slot"),
 								SideB:   cmd.Bool("sideb"),
 							}
-							save, ok := manager.Slots[slotID]
+							save, ok := m.Slots[slotID]
 							if !ok {
 								return nil
 							}
@@ -306,7 +307,7 @@ func main() {
 							},
 						},
 						Action: func(ctx context.Context, cmd *cli.Command) error {
-							err := manager.SetSlot(
+							err := m.SetSlot(
 								cmd.StringArg("save_name"),
 								cmd.IntArg("chapter"),
 								cmd.IntArg("slot"),
@@ -335,7 +336,7 @@ func main() {
 							},
 						},
 						Action: func(ctx context.Context, cmd *cli.Command) error {
-							err := manager.UnsetSlot(
+							err := m.UnsetSlot(
 								cmd.IntArg("chapter"),
 								cmd.IntArg("slot"),
 								cmd.Bool("erase-unmanaged"),
@@ -349,7 +350,7 @@ func main() {
 				Name:  "saves",
 				Usage: "list all save files",
 				Action: func(ctx context.Context, cmd *cli.Command) error {
-					for id := range manager.Saves {
+					for id := range m.Saves {
 						fmt.Printf("Chapter %d - %s\n", id.Chapter, id.Name)
 					}
 					return nil
@@ -359,10 +360,10 @@ func main() {
 				Name:  "slots",
 				Usage: "list all save slots",
 				Action: func(ctx context.Context, cmd *cli.Command) error {
-					keys := slices.Collect(maps.Keys(manager.Slots))
+					keys := slices.Collect(maps.Keys(m.Slots))
 					slices.SortFunc(
 						keys,
-						func(a, b saves.SlotID) int {
+						func(a, b manager.SlotID) int {
 							if a.Chapter == b.Chapter && a.Slot == b.Slot {
 								return 0
 							}
@@ -374,13 +375,13 @@ func main() {
 						},
 					)
 					for _, id := range keys {
-						slot := manager.Slots[id]
+						slot := m.Slots[id]
 
 						var slotName string
 						var playerName string
 						var charName string
 
-						drSlot, ok := manager.Dr.GetSlot(id.Chapter, id.Slot)
+						drSlot, ok := m.Dr.GetSlot(id.Chapter, id.Slot)
 						if ok {
 							slotName, _ = (*drSlot)["Name"]
 						}

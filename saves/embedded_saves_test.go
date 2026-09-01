@@ -55,7 +55,7 @@ func TestGetExampleSaveBytesForChapter(t *testing.T) {
 		chapter5bytes,
 	}
 	for i := range 5 {
-		saveBytes, err := getExampleSaveBytesForChapter(i + 1)
+		saveBytes, err := GetExampleSaveBytesForChapter(i + 1)
 		if err != nil {
 			t.Errorf("Failed to receive bytes of chapter %d example save file bytes: %s", i+1, err)
 			continue
