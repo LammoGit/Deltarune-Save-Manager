@@ -220,9 +220,8 @@ func main() {
 				},
 			},
 			{
-				Name:    "slot",
-				Aliases: []string{},
-				Usage:   "commands for managing save slots",
+				Name:  "slot",
+				Usage: "commands for managing save slots",
 				Commands: []*cli.Command{
 					{
 						Name:  "save",
@@ -377,8 +376,15 @@ func main() {
 					for _, id := range keys {
 						slot := manager.Slots[id]
 
+						var slotName string
 						var playerName string
 						var charName string
+
+						drSlot, ok := manager.Dr.GetSlot(id.Chapter, id.Slot)
+						if ok {
+							slotName, _ = (*drSlot)["Name"]
+						}
+
 						switch s := slot.(type) {
 						case *saves.Save1:
 							playerName = s.PlayerName
@@ -387,10 +393,12 @@ func main() {
 							playerName = s.PlayerName
 							charName = s.CharName
 						}
+
 						fmt.Printf(
-							"Chapter:%d Slot:%d Player:%s Character:%s\n",
+							"Chapter:%d Slot:%d SlotName:%s Player:%s Character:%s\n",
 							id.Chapter,
 							id.Slot,
+							slotName,
 							playerName,
 							charName,
 						)

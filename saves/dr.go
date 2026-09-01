@@ -97,11 +97,17 @@ func (dr *DrINI) SetSlot(slot SlotDr, index int) bool {
 
 // SetSlotFromSave sets a save slot at given chapter and index by setting sector data
 // using given save. Replaces previous save when replace is set to true
-func (dr *DrINI) SetSlotFromSave(save Save, chapter int, index int, replace bool) bool {
+func (dr *DrINI) SetSlotFromSave(save Save, chapter int, index int, replace bool, customName ...string) bool {
 	if !replace {
 		if _, ok := dr.GetSlot(chapter, index); ok {
 			return false
 		}
+	}
+
+	nameChosen := len(customName) > 0
+	var overrideName string
+	if nameChosen {
+		overrideName = customName[0]
 	}
 
 	f := func(name string, time any, room float64) {
@@ -114,9 +120,15 @@ func (dr *DrINI) SetSlotFromSave(save Save, chapter int, index int, replace bool
 
 	switch s := save.(type) {
 	case *Save1:
-		f(s.PlayerName, s.Time, s.Room)
+		if !nameChosen {
+			overrideName = s.PlayerName
+		}
+		f(overrideName, s.Time, s.Room)
 	case *Save2:
-		f(s.PlayerName, s.Time, s.Room)
+		if !nameChosen {
+			overrideName = s.PlayerName
+		}
+		f(overrideName, s.Time, s.Room)
 	default:
 		return false
 	}
