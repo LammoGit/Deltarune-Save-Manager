@@ -370,6 +370,7 @@ func (sm *SaveManager) SetSlot(name string, chapter, slot int, sideB bool, erase
 		chapter,
 		slot,
 		true,
+		saveID.Name,
 	)
 
 	return nil
@@ -590,3 +591,5 @@ func (sm *SaveManager) Copy(nameFrom, nameTo string, chapter int, sideB bool) er
 
 	return nil
 }
+
+//
