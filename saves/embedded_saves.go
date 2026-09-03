@@ -22,7 +22,7 @@ var chapter4bytes []byte
 var chapter5bytes []byte
 
 // getExampleSaveBytesForChapter returns bytes of example save bytes by chapter
-func getExampleSaveBytesForChapter(chapter int) ([]byte, error) {
+func GetExampleSaveBytesForChapter(chapter int) ([]byte, error) {
 	switch chapter {
 	case 1:
 		return chapter1bytes, nil

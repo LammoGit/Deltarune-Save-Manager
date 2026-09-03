@@ -1,4 +1,4 @@
-package saves
+package dr
 
 import (
 	"errors"
@@ -8,6 +8,8 @@ import (
 	"path/filepath"
 	"strings"
 	"testing"
+
+	"github.com/LammoGit/Deltarune-Save-Manager/saves"
 )
 
 /* Test Config */
@@ -199,12 +201,12 @@ func TestDrIniSetSlotFromSave(t *testing.T) {
 		t.Fatalf("Failed to load dr.ini: %v", err)
 	}
 
-	save1 := &Save1{
+	save1 := &saves.Save1{
 		PlayerName: "Kris",
 		Time:       42.0,
 		Room:       1.5,
 	}
-	save2 := &Save2{
+	save2 := &saves.Save2{
 		PlayerName: "Susie",
 		Time:       99.9,
 		Room:       2.7,

@@ -83,9 +83,9 @@ drsm slot unset 4 2
 
 ## Roadmap
 
-- [ ] Optimize file parser by removing `reflection` to improve performance.
-- [ ] Refactor and improve global flags to string conversion.
 - [ ] Add save file editing capabilities (modify stats, items, and flags).
+- [ ] Automatically save completion of a managed save
+- [ ] Refactor and improve global flags to string conversion.
 - [ ] Develop a Graphical User Interface (GUI) wrapper for non-CLI users.
 
 ## License

@@ -1,4 +1,4 @@
-package saves
+package manager
 
 import (
 	"os"
@@ -6,6 +6,7 @@ import (
 	"slices"
 	"testing"
 
+	"github.com/LammoGit/Deltarune-Save-Manager/saves"
 	"github.com/LammoGit/Deltarune-Save-Manager/utils"
 )
 
@@ -45,16 +46,16 @@ func TestSlotIDSideBStringConversion(t *testing.T) {
 func TestLoadSaves(t *testing.T) {
 	savesPath := t.TempDir()
 
-	chapter1bytes, err := getExampleSaveBytesForChapter(1)
+	chapter1bytes, err := saves.GetExampleSaveBytesForChapter(1)
 	if err != nil {
 		t.Fatalf("Failed to get bytes for example chapter 1 save file: %s", err)
 	}
 
-	expectedSaveGeneral, err := ParseSaveBytes(chapter1bytes, 1)
+	expectedSaveGeneral, err := saves.ParseSaveBytes(chapter1bytes, 1)
 	if err != nil {
 		t.Fatalf("Failed to parse save file bytes into save object: %s", err)
 	}
-	expectedSave, ok := expectedSaveGeneral.(*Save1)
+	expectedSave, ok := expectedSaveGeneral.(*saves.Save1)
 	if !ok {
 		t.Fatal("Expected save object to be of type *Save1")
 	}
@@ -76,7 +77,7 @@ func TestLoadSaves(t *testing.T) {
 		t.Fatalf("Failed to create a hard link: %s", err)
 	}
 
-	saves, saveLinks, err := loadSaves(savesPath)
+	savesMap, saveLinks, err := loadSaves(savesPath)
 	if err != nil {
 		t.Fatalf("loadSaves returned error: %s", err)
 	}
@@ -88,12 +89,12 @@ func TestLoadSaves(t *testing.T) {
 		{"Save3", 1, false},
 	}
 	for _, id := range expectedIDs {
-		saveGeneral, ok := saves[id]
+		saveGeneral, ok := savesMap[id]
 		if !ok {
 			t.Errorf("SaveID %v not found in saves map", id)
 			continue
 		}
-		save, ok := saveGeneral.(*Save1)
+		save, ok := saveGeneral.(*saves.Save1)
 		if !ok {
 			t.Errorf("Save for %v is not *Save1", id)
 			continue
@@ -161,16 +162,16 @@ func TestLoadSavesWithInvalidPath(t *testing.T) {
 func TestLoadSlots(t *testing.T) {
 	slotsPath := t.TempDir()
 
-	chapter1bytes, err := getExampleSaveBytesForChapter(1)
+	chapter1bytes, err := saves.GetExampleSaveBytesForChapter(1)
 	if err != nil {
 		t.Fatalf("Failed to get bytes for example chapter 1 save file: %s", err)
 	}
 
-	expectedSaveGeneral, err := ParseSaveBytes(chapter1bytes, 1)
+	expectedSaveGeneral, err := saves.ParseSaveBytes(chapter1bytes, 1)
 	if err != nil {
 		t.Fatalf("Failed to parse save file bytes into save object: %s", err)
 	}
-	expectedSave, ok := expectedSaveGeneral.(*Save1)
+	expectedSave, ok := expectedSaveGeneral.(*saves.Save1)
 	if !ok {
 		t.Fatal("Expected save object to be of type *Save1")
 	}
@@ -209,7 +210,7 @@ func TestLoadSlots(t *testing.T) {
 			t.Errorf("SlotID %v not found in slots map", id)
 			continue
 		}
-		save, ok := saveGeneral.(*Save1)
+		save, ok := saveGeneral.(*saves.Save1)
 		if !ok {
 			t.Errorf("Slot for %v is not *Save1", id)
 			continue
@@ -278,7 +279,7 @@ func TestNewSaveManager(t *testing.T) {
 	slotsPath := t.TempDir()
 
 	// Create some saves and slots to load
-	chapter1bytes, err := getExampleSaveBytesForChapter(1)
+	chapter1bytes, err := saves.GetExampleSaveBytesForChapter(1)
 	if err != nil {
 		t.Fatalf("Failed to get bytes for example chapter 1 save file: %s", err)
 	}
@@ -858,7 +859,7 @@ func TestSetUnmanagedSlot(t *testing.T) {
 	// Create an unmanaged slot: just write a file in slotsPath
 	slotID := SlotID{1, 1, false}
 	slotPath := filepath.Join(slotsPath, slotID.String())
-	chapter1bytes, err := getExampleSaveBytesForChapter(1)
+	chapter1bytes, err := saves.GetExampleSaveBytesForChapter(1)
 	if err != nil {
 		t.Fatalf("Failed to get example bytes: %s", err)
 	}
@@ -894,7 +895,7 @@ func TestSetUnmanageedSlotWithErasingPermission(t *testing.T) {
 	// Create unmanaged slot
 	slotID := SlotID{1, 1, false}
 	slotPath := filepath.Join(slotsPath, slotID.String())
-	chapter1bytes, err := getExampleSaveBytesForChapter(1)
+	chapter1bytes, err := saves.GetExampleSaveBytesForChapter(1)
 	if err != nil {
 		t.Fatalf("Failed to get example bytes: %s", err)
 	}
@@ -1007,7 +1008,7 @@ func TestUnsetUnmanagedSlot(t *testing.T) {
 	// Create unmanaged slot
 	slotID := SlotID{1, 1, false}
 	slotPath := filepath.Join(slotsPath, slotID.String())
-	chapter1bytes, err := getExampleSaveBytesForChapter(1)
+	chapter1bytes, err := saves.GetExampleSaveBytesForChapter(1)
 	if err != nil {
 		t.Fatalf("Failed to get example bytes: %s", err)
 	}
@@ -1038,7 +1039,7 @@ func TestUnsetUnmanagedSlotWithErasingPermission(t *testing.T) {
 	// Create unmanaged slot
 	slotID := SlotID{1, 1, false}
 	slotPath := filepath.Join(slotsPath, slotID.String())
-	chapter1bytes, err := getExampleSaveBytesForChapter(1)
+	chapter1bytes, err := saves.GetExampleSaveBytesForChapter(1)
 	if err != nil {
 		t.Fatalf("Failed to get example bytes: %s", err)
 	}

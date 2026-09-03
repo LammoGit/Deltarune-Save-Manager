@@ -1,5 +1,5 @@
 // Package saves implements structs and functions needed to manage save files and save slots
-package saves
+package manager
 
 import (
 	"fmt"
@@ -8,6 +8,8 @@ import (
 	"slices"
 	"strconv"
 
+	"github.com/LammoGit/Deltarune-Save-Manager/dr"
+	"github.com/LammoGit/Deltarune-Save-Manager/saves"
 	"github.com/LammoGit/Deltarune-Save-Manager/utils"
 )
 
@@ -51,21 +53,21 @@ func (id SlotID) String() string {
 type SaveManager struct {
 	ManagerPath string
 	SlotsPath   string
-	Saves       map[SaveID]Save
-	Slots       map[SlotID]Save
+	Saves       map[SaveID]saves.Save
+	Slots       map[SlotID]saves.Save
 	SaveLinks   map[string][]SaveID
 	SlotLinks   map[string][]SlotID
-	Dr          DrINI
+	Dr          dr.DrINI
 }
 
 // loadSaves returns a map of all managed saves and their hardlinks
-func loadSaves(dirPath string) (map[SaveID]Save, map[string][]SaveID, error) {
+func loadSaves(dirPath string) (map[SaveID]saves.Save, map[string][]SaveID, error) {
 	entries, err := os.ReadDir(dirPath)
 	if err != nil {
 		return nil, nil, err
 	}
 
-	saves := make(map[SaveID]Save)
+	savesMap := make(map[SaveID]saves.Save)
 	links := make(map[string][]SaveID)
 
 	for _, entry := range entries {
@@ -89,7 +91,7 @@ func loadSaves(dirPath string) (map[SaveID]Save, map[string][]SaveID, error) {
 		sideB := match[2] != "a"
 		name := match[3]
 
-		save, err := LoadSave(savePath, chapter)
+		save, err := saves.LoadSave(savePath, chapter)
 		if err != nil {
 			continue
 		}
@@ -100,21 +102,21 @@ func loadSaves(dirPath string) (map[SaveID]Save, map[string][]SaveID, error) {
 			continue
 		}
 
-		saves[saveID] = save
+		savesMap[saveID] = save
 		links[hardLinkID] = append(links[hardLinkID], saveID)
 	}
 
-	return saves, links, nil
+	return savesMap, links, nil
 }
 
 // loadSaves returns a map of all game saves and their hardlinks
-func loadSlots(dirPath string) (map[SlotID]Save, map[string][]SlotID, error) {
+func loadSlots(dirPath string) (map[SlotID]saves.Save, map[string][]SlotID, error) {
 	entries, err := os.ReadDir(dirPath)
 	if err != nil {
 		return nil, nil, err
 	}
 
-	slots := make(map[SlotID]Save)
+	slots := make(map[SlotID]saves.Save)
 	links := make(map[string][]SlotID)
 
 	for _, entry := range entries {
@@ -142,7 +144,7 @@ func loadSlots(dirPath string) (map[SlotID]Save, map[string][]SlotID, error) {
 
 		sideB := match[3] != ""
 
-		save, err := LoadSave(slotPath, chapter)
+		save, err := saves.LoadSave(slotPath, chapter)
 		if err != nil {
 			continue
 		}
@@ -172,7 +174,7 @@ func NewSaveManager(managerPath, slotsPath string) (sm *SaveManager, err error) 
 		return
 	}
 
-	dr, err := NewDrINI(filepath.Join(slotsPath, "dr.ini"))
+	dr, err := dr.NewDrINI(filepath.Join(slotsPath, "dr.ini"))
 	if err != nil {
 		return
 	}
@@ -236,7 +238,7 @@ func (sm *SaveManager) Create(name string, chapter int, sideB bool) error {
 	defer file.Close()
 
 	//
-	content, err := getExampleSaveBytesForChapter(chapter)
+	content, err := saves.GetExampleSaveBytesForChapter(chapter)
 	if err != nil {
 		return err
 	}
@@ -252,7 +254,7 @@ func (sm *SaveManager) Create(name string, chapter int, sideB bool) error {
 	}
 
 	sm.SaveLinks[hardLinkID] = append(sm.SaveLinks[hardLinkID], saveID)
-	sm.Saves[saveID], err = LoadSave(path, chapter)
+	sm.Saves[saveID], err = saves.LoadSave(path, chapter)
 	if err != nil {
 		return err
 	}
@@ -341,11 +343,11 @@ func (sm *SaveManager) SetSlot(name string, chapter, slot int, sideB bool, erase
 	slotHardLink, slotExist := sm.hardLinkIDFromSlotID(slotID)
 
 	// Get saves pointing to the same space in memory
-	saves, ok := sm.SaveLinks[slotHardLink]
+	saveIDs, ok := sm.SaveLinks[slotHardLink]
 
 	// If slot exists, slot doesn't have linked saves and
 	// it isn't allowed to remove unmanaged saves, then return an error
-	if slotExist && (!ok || len(saves) == 0) && !eraseUnmanaged {
+	if slotExist && (!ok || len(saveIDs) == 0) && !eraseUnmanaged {
 		return utils.ErrTakenByUnmanagedSave
 	}
 
@@ -356,7 +358,7 @@ func (sm *SaveManager) SetSlot(name string, chapter, slot int, sideB bool, erase
 	}
 
 	// Update slot object
-	sm.Slots[slotID], _ = LoadSave(slotPath, chapter)
+	sm.Slots[slotID], _ = saves.LoadSave(slotPath, chapter)
 
 	// Remove slot identifier from the old hard link
 	sm.SlotLinks[slotHardLink] = utils.DeleteEqual(sm.SlotLinks[slotHardLink], slotID)
@@ -444,7 +446,7 @@ func (sm *SaveManager) SaveSlot(name string, chapter, slot int, sideB bool) erro
 	}
 
 	// Add new save object to the saves map
-	sm.Saves[saveID], _ = LoadSave(savePath, chapter)
+	sm.Saves[saveID], _ = saves.LoadSave(savePath, chapter)
 
 	// Add save idetifier to the hard link map
 	sm.SaveLinks[slotHardLink] = append(sm.SaveLinks[slotHardLink], saveID)
@@ -574,7 +576,7 @@ func (sm *SaveManager) Copy(nameFrom, nameTo string, chapter int, sideB bool) er
 		return err
 	}
 
-	save, err := ParseSaveReader(fileFrom, chapter)
+	save, err := saves.ParseSaveReader(fileFrom, chapter)
 	if err != nil {
 		return err
 	}
