@@ -164,6 +164,16 @@ func loadSlots(dirPath string) (map[SlotID]saves.Save, map[string][]SlotID, erro
 
 // NewSaveManager creates a new SaveManager object
 func NewSaveManager(managerPath, slotsPath string) (sm *SaveManager, err error) {
+	err = os.MkdirAll(managerPath, 0644)
+	if err != nil {
+		return
+	}
+
+	err = os.MkdirAll(slotsPath, 0644)
+	if err != nil {
+		return
+	}
+
 	saves, saveLinks, err := loadSaves(managerPath)
 	if err != nil {
 		return
