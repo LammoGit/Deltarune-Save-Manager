@@ -56,12 +56,11 @@ func main() {
 							},
 						},
 						Action: func(ctx context.Context, cmd *cli.Command) error {
-							err := m.Create(
+							return m.Create(
 								cmd.StringArg("save_name"),
 								cmd.IntArg("chapter"),
 								cmd.Bool("sideb"),
 							)
-							return err
 						},
 					},
 					{
@@ -115,13 +114,12 @@ func main() {
 							},
 						},
 						Action: func(ctx context.Context, cmd *cli.Command) error {
-							err := m.Remove(
+							return m.Remove(
 								cmd.StringArg("save_name"),
 								cmd.IntArg("chapter"),
 								cmd.Bool("sideb"),
 								cmd.Bool("remove-slots"),
 							)
-							return err
 						},
 					},
 					{
@@ -144,13 +142,12 @@ func main() {
 							},
 						},
 						Action: func(ctx context.Context, cmd *cli.Command) error {
-							err := m.Rename(
+							return m.Rename(
 								cmd.StringArg("save_name from"),
 								cmd.StringArg("save_name to"),
 								cmd.IntArg("chapter"),
 								cmd.Bool("sideb"),
 							)
-							return err
 						},
 					},
 					{
@@ -173,13 +170,12 @@ func main() {
 							},
 						},
 						Action: func(ctx context.Context, cmd *cli.Command) error {
-							err := m.Swap(
+							return m.Swap(
 								cmd.StringArg("first save_name"),
 								cmd.StringArg("second save_name"),
 								cmd.IntArg("chapter"),
 								cmd.Bool("sideb"),
 							)
-							return err
 						},
 					},
 					{
@@ -202,20 +198,44 @@ func main() {
 							},
 						},
 						Action: func(ctx context.Context, cmd *cli.Command) error {
-							err := m.Copy(
-								cmd.StringArg("save_name from"),
-								cmd.StringArg("save_name to"),
+							return m.Copy(
+								cmd.StringArg("save_name_from"),
+								cmd.StringArg("save_name_to"),
 								cmd.IntArg("chapter"),
 								cmd.Bool("sideb"),
 							)
-							return err
 						},
 					},
 					{
 						Name:  "edit",
 						Usage: "change properties of a save file",
+						Flags: []cli.Flag{
+							&cli.BoolFlag{
+								Name: "sideb",
+							},
+						},
+						Arguments: []cli.Argument{
+							&cli.StringArg{
+								Name: "save_name",
+							},
+							&cli.IntArg{
+								Name: "chapter",
+							},
+							&cli.StringArg{
+								Name: "path",
+							},
+							&cli.StringArg{
+								Name: "value",
+							},
+						},
 						Action: func(ctx context.Context, cmd *cli.Command) error {
-							return nil
+							return m.EditSave(
+								cmd.StringArg("save_name"),
+								cmd.IntArg("chapter"),
+								cmd.Bool("sideb"),
+								cmd.StringArg("path"),
+								cmd.StringArg("value"),
+							)
 						},
 					},
 				},
@@ -244,13 +264,12 @@ func main() {
 							},
 						},
 						Action: func(ctx context.Context, cmd *cli.Command) error {
-							err := m.SaveSlot(
+							return m.SaveSlot(
 								cmd.StringArg("save_name"),
 								cmd.IntArg("chapter"),
 								cmd.IntArg("slot"),
 								cmd.Bool("sideb"),
 							)
-							return err
 						},
 					},
 					{
@@ -307,14 +326,13 @@ func main() {
 							},
 						},
 						Action: func(ctx context.Context, cmd *cli.Command) error {
-							err := m.SetSlot(
+							return m.SetSlot(
 								cmd.StringArg("save_name"),
 								cmd.IntArg("chapter"),
 								cmd.IntArg("slot"),
 								cmd.Bool("sideb"),
 								cmd.Bool("erase-unmanaged"),
 							)
-							return err
 						},
 					},
 					{
@@ -336,12 +354,43 @@ func main() {
 							},
 						},
 						Action: func(ctx context.Context, cmd *cli.Command) error {
-							err := m.UnsetSlot(
+							return m.UnsetSlot(
 								cmd.IntArg("chapter"),
 								cmd.IntArg("slot"),
 								cmd.Bool("erase-unmanaged"),
 							)
-							return err
+						},
+					},
+					{
+						Name:  "edit",
+						Usage: "change properties of a save file",
+						Flags: []cli.Flag{
+							&cli.BoolFlag{
+								Name: "sideb",
+							},
+						},
+						Arguments: []cli.Argument{
+							&cli.IntArg{
+								Name: "chapter",
+							},
+							&cli.IntArg{
+								Name: "slot",
+							},
+							&cli.StringArg{
+								Name: "path",
+							},
+							&cli.StringArg{
+								Name: "value",
+							},
+						},
+						Action: func(ctx context.Context, cmd *cli.Command) error {
+							return m.EditSlot(
+								cmd.IntArg("chapter"),
+								cmd.IntArg("slot"),
+								cmd.Bool("sideb"),
+								cmd.StringArg("path"),
+								cmd.StringArg("value"),
+							)
 						},
 					},
 				},
