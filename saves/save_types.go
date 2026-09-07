@@ -2,9 +2,18 @@
 package saves
 
 import (
+	"errors"
 	"fmt"
+	"reflect"
+	"strconv"
 	"strings"
 	"time"
+)
+
+// errors
+var (
+	ErrInvalidPropertyPath  = errors.New("Invalid property path")
+	ErrInvalidPropertyValue = errors.New("Invalid property value")
 )
 
 // ItemStats1 represents stats of a dark world item in chapter 1
@@ -174,6 +183,7 @@ type Save5 Save2
 // Save must implement the String() method
 type Save interface {
 	String() string
+	Edit(path, value string) error
 }
 
 // String returns a string representation of ItemStats1 structure
@@ -546,4 +556,159 @@ func (s *Save2) String() string {
 	fmt.Fprintf(bp, "Time: %s\n", time.Duration(uint64(s.Time/30))*time.Second)
 
 	return b.String()
+}
+
+// Edit changes the property in a save using provided path to it
+func (s *Save1) Edit(path, value string) error {
+	var kind reflect.Kind
+
+	sValue := reflect.ValueOf(s).Elem()
+	steps := strings.Split(path, ".")
+
+	for _, step := range steps {
+		kind = sValue.Kind()
+
+		// if it's an array choose element using given index starting from 1
+		if kind == reflect.Array {
+			// get step index of the array
+			arrayLen := sValue.Len()
+			idx64, err := strconv.ParseInt(step, 10, 64)
+			idx := int(idx64)
+			if err != nil || idx <= 0 || idx > arrayLen {
+				return ErrInvalidPropertyPath
+			}
+			idx--
+			sValue = sValue.Index(idx)
+			continue
+		}
+
+		// if it isn't struct or array, then path is invalid
+		if kind != reflect.Struct {
+			return ErrInvalidPropertyPath
+		}
+
+		// find field with given name
+		found := false
+		step = strings.ToLower(step)
+		for field, fieldValue := range sValue.Fields() {
+			if strings.ToLower(field.Name) == step {
+				// next step
+				sValue = fieldValue
+				found = true
+				break
+			}
+		}
+
+		// if field with given name wasn't found, then path is invalid
+		if !found {
+			return ErrInvalidPropertyPath
+		}
+	}
+
+	switch sValue.Kind() {
+	case reflect.Int, reflect.Int16, reflect.Int32, reflect.Int64:
+		i64, err := strconv.ParseInt(value, 10, 64)
+		if err != nil {
+			return fmt.Errorf("%w: field's value is integer", ErrInvalidPropertyValue)
+		}
+		sValue.SetInt(i64)
+	case reflect.Uint, reflect.Uint16, reflect.Uint32, reflect.Uint64:
+		u64, err := strconv.ParseUint(value, 10, 64)
+		if err != nil {
+			return fmt.Errorf("%w: field's value is unsigned integer", ErrInvalidPropertyValue)
+		}
+		sValue.SetUint(u64)
+	case reflect.Float32, reflect.Float64:
+		f64, err := strconv.ParseFloat(value, 64)
+		if err != nil {
+			return fmt.Errorf("%w: field's value is float", ErrInvalidPropertyValue)
+		}
+		sValue.SetFloat(f64)
+	case reflect.String:
+		sValue.SetString(value)
+	case reflect.Bool:
+		if value != "true" && value != "false" {
+			return fmt.Errorf("%w: field's value is boolean", ErrInvalidPropertyValue)
+		}
+		sValue.SetBool(value == "true")
+	}
+
+	return nil
+}
+
+func (s *Save2) Edit(path, value string) error {
+	var kind reflect.Kind
+
+	sValue := reflect.ValueOf(s).Elem()
+	steps := strings.Split(path, ".")
+
+	for _, step := range steps {
+		kind = sValue.Kind()
+
+		// if it's an array choose element using given index starting from 1
+		if kind == reflect.Array {
+			// get step index of the array
+			arrayLen := sValue.Len()
+			idx64, err := strconv.ParseInt(step, 10, 64)
+			idx := int(idx64)
+			if err != nil || idx <= 0 || idx > arrayLen {
+				return ErrInvalidPropertyPath
+			}
+			idx--
+			sValue = sValue.Index(idx)
+			continue
+		}
+
+		// if it isn't struct or array, then path is invalid
+		if kind != reflect.Struct {
+			return ErrInvalidPropertyPath
+		}
+
+		// find field with given name
+		found := false
+		step = strings.ToLower(step)
+		for field, fieldValue := range sValue.Fields() {
+			if strings.ToLower(field.Name) == step {
+				// next step
+				sValue = fieldValue
+				found = true
+				break
+			}
+		}
+
+		// if field with given name wasn't found, then path is invalid
+		if !found {
+			return ErrInvalidPropertyPath
+		}
+	}
+
+	switch sValue.Kind() {
+	case reflect.Int, reflect.Int16, reflect.Int32, reflect.Int64:
+		i64, err := strconv.ParseInt(value, 10, 64)
+		if err != nil {
+			return fmt.Errorf("%w: field's value is integer", ErrInvalidPropertyValue)
+		}
+		sValue.SetInt(i64)
+	case reflect.Uint, reflect.Uint16, reflect.Uint32, reflect.Uint64:
+		u64, err := strconv.ParseUint(value, 10, 64)
+		if err != nil {
+			return fmt.Errorf("%w: field's value is unsigned integer", ErrInvalidPropertyValue)
+		}
+		sValue.SetUint(u64)
+	case reflect.Float32, reflect.Float64:
+		f64, err := strconv.ParseFloat(value, 64)
+		if err != nil {
+			return fmt.Errorf("%w: field's value is float", ErrInvalidPropertyValue)
+		}
+		sValue.SetFloat(f64)
+	case reflect.String:
+		sValue.SetString(value)
+	case reflect.Bool:
+		if value != "true" && value != "false" {
+			return fmt.Errorf("%w: field's value is boolean", ErrInvalidPropertyValue)
+		}
+		sValue.SetBool(value == "true")
+	}
+
+	return nil
 }

@@ -594,4 +594,47 @@ func (sm *SaveManager) Copy(nameFrom, nameTo string, chapter int, sideB bool) er
 	return nil
 }
 
-//
+// EditSave changes property of a save file
+func (sm *SaveManager) EditSave(save_name string, chapter int, sideb bool, path, value string) error {
+	saveID := SaveID{Name: save_name, Chapter: chapter, SideB: sideb}
+	save, ok := sm.Saves[saveID]
+	if !ok {
+		return utils.ErrSaveNotExist
+	}
+	err := save.Edit(path, value)
+	if err != nil {
+		return err
+	}
+
+	saveBytes, err := saves.Save2Bytes(save)
+	if err != nil {
+		return err
+	}
+
+	savePath := filepath.Join(sm.ManagerPath, saveID.String())
+
+	return os.WriteFile(savePath, saveBytes, 0644)
+}
+
+// SlotEdit changes property of a save file in a slot
+func (sm *SaveManager) EditSlot(chapter, slot int, sideb bool, path, value string) error {
+	slotID := SlotID{Chapter: chapter, Slot: slot, SideB: sideb}
+	save, ok := sm.Slots[slotID]
+	if !ok {
+		return utils.ErrSaveNotExist
+	}
+
+	err := save.Edit(path, value)
+	if err != nil {
+		return err
+	}
+
+	saveBytes, err := saves.Save2Bytes(save)
+	if err != nil {
+		return err
+	}
+
+	slotPath := filepath.Join(sm.SlotsPath, slotID.String())
+
+	return os.WriteFile(slotPath, saveBytes, 0644)
+}
