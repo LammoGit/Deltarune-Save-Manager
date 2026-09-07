@@ -2,3 +2,5 @@ slots/
 bin/
 *.exe
 *profile
+# Added by goreleaser init:
+dist/
